@@ -1,0 +1,608 @@
+/* リセットとベーススタイル */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8fafc;
+    color: #334155;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 16px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ヘッダー */
+.header {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+.header h1 {
+    font-size: 32px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 12px;
+}
+
+.week-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.week-navigation h2 {
+    font-size: 24px;
+    font-weight: 500;
+    color: #475569;
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.nav-btn {
+    background: #14b8a6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nav-btn:hover {
+    background: #0d9488;
+    transform: translateY(-1px);
+}
+
+.nav-btn:active {
+    transform: translateY(0);
+}
+
+/* メインコンテンツ */
+.main-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* カレンダーセクション */
+.calendar-section {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 700px;
+    overflow: hidden;
+}
+
+/* 統合されたカレンダー */
+.calendar-unified {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    gap: 1px;
+    background: #cbd5e1;
+    border-radius: 8px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* カレンダーヘッダー */
+.calendar-header {
+    display: contents;
+}
+
+.time-column-header {
+    background: #f1f5f9;
+    padding: 12px 8px;
+    text-align: center;
+    font-weight: 600;
+    color: #64748b;
+    border-radius: 8px 0 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.day-header {
+    background: white;
+    padding: 12px 8px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.day-header:last-child {
+    border-radius: 0 8px 0 0;
+}
+
+.day-header.today {
+    background: #ecfdf5;
+    border-color: #10b981;
+}
+
+.day-name {
+    font-weight: 600;
+    font-size: 16px;
+    color: #374151;
+    margin-bottom: 4px;
+}
+
+.day-date {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.day-header.today .day-name {
+    color: #10b981;
+}
+
+.day-header.today .day-date {
+    color: #059669;
+}
+
+.day-header.saturday {
+    background: #fef3f2;
+    border-color: #fecaca;
+}
+
+.day-header.saturday .day-name {
+    color: #dc2626;
+}
+
+.day-header.saturday .day-date {
+    color: #b91c1c;
+}
+
+.day-header.sunday {
+    background: #fef2f2;
+    border-color: #fca5a5;
+}
+
+.day-header.sunday .day-name {
+    color: #dc2626;
+}
+
+.day-header.sunday .day-date {
+    color: #b91c1c;
+}
+
+.day-header.holiday {
+    background: #fef2f2;
+    border-color: #fca5a5;
+}
+
+.day-header.holiday .day-name {
+    color: #dc2626;
+}
+
+.day-header.holiday .day-date {
+    color: #b91c1c;
+}
+
+/* 時間列 */
+.time-column {
+    background: #f1f5f9;
+    display: flex;
+    flex-direction: column;
+}
+
+.time-slot {
+    height: 12px;
+    border-bottom: 1px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+    position: relative;
+}
+
+.time-slot:last-child {
+    border-bottom: none;
+}
+
+.time-slot.hour-mark {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #374151;
+    height: 48px;
+    font-size: 14px;
+    border-bottom: 2px solid #cbd5e1;
+    align-items: flex-start;
+    padding-top: 4px;
+}
+
+/* 日列 */
+.day-column {
+    background: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.day-column:last-child .time-cell:last-child {
+    border-radius: 0 0 8px 0;
+}
+
+.day-column.saturday {
+    background: #fef3f2;
+}
+
+.day-column.sunday {
+    background: #fef2f2;
+}
+
+.day-column.holiday {
+    background: #fef2f2;
+}
+
+.day-column.saturday .time-cell {
+    background: #fef3f2;
+}
+
+.day-column.sunday .time-cell {
+    background: #fef2f2;
+}
+
+.day-column.holiday .time-cell {
+    background: #fef2f2;
+}
+
+.day-column.saturday .time-cell:hover {
+    background-color: #fecaca !important;
+}
+
+.day-column.sunday .time-cell:hover {
+    background-color: #fca5a5 !important;
+}
+
+.day-column.holiday .time-cell:hover {
+    background-color: #fca5a5 !important;
+}
+
+.time-cell {
+    height: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    position: relative;
+    user-select: none;
+}
+
+.time-cell.hour-boundary {
+    border-bottom: 2px solid #cbd5e1;
+}
+
+.time-cell:hover {
+    background-color: #f0fdfa;
+}
+
+.time-cell.selecting {
+    background-color: #a7f3d0 !important;
+}
+
+.time-cell.selected {
+    background-color: #34d399 !important;
+    border-left: 3px solid #10b981;
+    border-right: 3px solid #10b981;
+    position: relative;
+    z-index: 2;
+}
+
+.time-cell.selected:first-of-type {
+    border-top: 2px solid #10b981;
+}
+
+.time-cell.selected:last-of-type {
+    border-bottom: 2px solid #10b981;
+}
+
+.time-cell.selected::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(16, 185, 129, 0.3) 50%, transparent 100%);
+    pointer-events: none;
+}
+
+.time-cell:last-child {
+    border-bottom: none;
+}
+
+/* 出力セクション */
+.output-section {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.output-section h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 12px;
+}
+
+/* 統合された出力エリア */
+.integrated-output {
+    flex: 1;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.candidates-display {
+    flex: 1;
+    padding: 14px;
+    min-height: 120px;
+    overflow-y: auto;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.candidates-display:focus {
+    outline: 2px solid #14b8a6;
+    outline-offset: -2px;
+}
+
+.empty-message {
+    color: #9ca3af;
+    font-style: italic;
+    text-align: center;
+    margin-top: 40px;
+}
+
+.candidate-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
+}
+
+.candidate-line:last-child {
+    border-bottom: none;
+}
+
+.candidate-line:hover {
+    background-color: #f9fafb;
+    margin: 0 -14px;
+    padding: 8px 14px;
+    border-radius: 4px;
+}
+
+.candidate-text {
+    flex: 1;
+    user-select: text;
+    cursor: text;
+}
+
+.remove-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0.7;
+    margin-left: 12px;
+}
+
+.remove-btn:hover {
+    background: #dc2626;
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+/* 説明文 */
+.description {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 12px;
+    text-align: center;
+    padding: 10px;
+    background: #f1f5f9;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+
+/* ボタンエリア */
+.button-area {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+
+.copy-btn {
+    flex: 1;
+    background: #14b8a6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.copy-btn:hover {
+    background: #0d9488;
+    transform: translateY(-1px);
+}
+
+.copy-btn:active {
+    transform: translateY(0);
+}
+
+.copy-btn:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.reset-btn {
+    background: #64748b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.reset-btn:hover {
+    background: #475569;
+}
+
+/* コピー通知 */
+.copy-notification {
+    background: #10b981;
+    color: white;
+    text-align: center;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+}
+
+.copy-notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 選択オーバーレイ */
+.selection-overlay {
+    position: absolute;
+    background: rgba(20, 184, 166, 0.2);
+    border: 2px solid #14b8a6;
+    border-radius: 4px;
+    pointer-events: none;
+    display: none;
+    z-index: 10;
+}
+
+/* レスポンシブ */
+@media (max-width: 1200px) {
+    .main-content {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .container {
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    .calendar-section,
+    .output-section {
+        height: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 12px;
+    }
+    
+    .calendar-header {
+        grid-template-columns: 60px repeat(7, 1fr);
+    }
+    
+    .calendar-grid {
+        grid-template-columns: 60px 1fr;
+    }
+    
+    .time-column-header,
+    .time-slot {
+        font-size: 11px;
+    }
+    
+    .day-header {
+        padding: 8px 4px;
+    }
+    
+    .day-name {
+        font-size: 14px;
+    }
+    
+    .day-date {
+        font-size: 12px;
+    }
+    
+    .time-cell {
+        height: 8px;
+    }
+    
+    .time-slot {
+        height: 8px;
+    }
+    
+    .time-slot.hour-mark {
+        height: 32px;
+        font-size: 12px;
+        align-items: flex-start;
+        padding-top: 2px;
+    }
+    
+    .week-navigation {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+}

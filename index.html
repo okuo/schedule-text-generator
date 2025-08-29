@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スケジュール調整 日時文字生成ツール</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- ヘッダー -->
+        <header class="header">
+            <h1>スケジュール調整 日時文字生成ツール</h1>
+            <div class="week-navigation">
+                <h2 id="current-month-year"></h2>
+                <div class="nav-buttons">
+                    <button id="today-btn" class="nav-btn">今週</button>
+                    <button id="prev-week" class="nav-btn">←</button>
+                    <button id="next-week" class="nav-btn">→</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- メインコンテンツ -->
+        <main class="main-content">
+            <!-- カレンダーエリア -->
+            <section class="calendar-section">
+                <div class="calendar-container">
+                    <!-- 統合されたカレンダー -->
+                    <div class="calendar-unified" id="calendar-unified">
+                        <!-- ヘッダー部分 -->
+                        <div class="calendar-header">
+                            <div class="time-column-header"></div>
+                            <div class="day-header" data-day="0">
+                                <div class="day-name">月</div>
+                                <div class="day-date" id="date-0"></div>
+                            </div>
+                            <div class="day-header" data-day="1">
+                                <div class="day-name">火</div>
+                                <div class="day-date" id="date-1"></div>
+                            </div>
+                            <div class="day-header" data-day="2">
+                                <div class="day-name">水</div>
+                                <div class="day-date" id="date-2"></div>
+                            </div>
+                            <div class="day-header" data-day="3">
+                                <div class="day-name">木</div>
+                                <div class="day-date" id="date-3"></div>
+                            </div>
+                            <div class="day-header" data-day="4">
+                                <div class="day-name">金</div>
+                                <div class="day-date" id="date-4"></div>
+                            </div>
+                            <div class="day-header" data-day="5">
+                                <div class="day-name">土</div>
+                                <div class="day-date" id="date-5"></div>
+                            </div>
+                            <div class="day-header" data-day="6">
+                                <div class="day-name">日</div>
+                                <div class="day-date" id="date-6"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 時間軸 -->
+                        <div class="time-column" id="time-column">
+                            <!-- JavaScriptで生成 -->
+                        </div>
+                        
+                        <!-- 日付グリッド (月曜日から日曜日まで7列) -->
+                        <!-- JavaScriptで生成 -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 出力エリア -->
+            <section class="output-section">
+                <div class="output-container">
+                    <h3>選択した日時</h3>
+                    
+                    <!-- 説明文 -->
+                    <p class="description">
+                        カレンダーから選んだ日時がここに表示されます。個別に削除もできます。
+                    </p>
+
+                    <!-- 統合されたテキストエリア -->
+                    <div class="integrated-output">
+                        <div class="candidates-display" id="candidates-display">
+                            <div class="empty-message">選択した日時がここに表示されます</div>
+                        </div>
+                    </div>
+
+                    <!-- ボタンエリア -->
+                    <div class="button-area">
+                        <button id="copy-btn" class="copy-btn">文字をコピー</button>
+                        <button id="reset-btn" class="reset-btn">リセット</button>
+                    </div>
+
+                    <!-- コピー完了通知 -->
+                    <div id="copy-notification" class="copy-notification">
+                        コピーしました！
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 選択表示用オーバーレイ -->
+    <div id="selection-overlay" class="selection-overlay"></div>
+
+    <!-- JavaScript -->
+    <script src="js/main.js"></script>
+    <script src="js/scheduler.js"></script>
+    <script src="js/textGenerator.js"></script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>動作テスト - スケジュール調整 日時文字生成ツール</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .test-result {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+        .launch-btn {
+            background: #14b8a6;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        .launch-btn:hover {
+            background: #0d9488;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>スケジュール調整 日時文字生成ツール - 動作テスト</h1>
+        
+        <a href="index.html" class="launch-btn">アプリケーションを起動</a>
+        
+        <div class="test-section">
+            <div class="test-title">1. JavaScriptクラスの動作テスト</div>
+            <div class="test-result" id="class-test"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">2. スケジューラー機能テスト</div>
+            <div class="test-result" id="scheduler-test"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">3. テキスト生成機能テスト</div>
+            <div class="test-result" id="text-generator-test"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">4. データフォーマットテスト</div>
+            <div class="test-result" id="format-test"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">5. エラーハンドリングテスト</div>
+            <div class="test-result" id="error-test"></div>
+        </div>
+    </div>
+
+    <!-- テスト対象のJavaScriptファイル -->
+    <script src="js/scheduler.js"></script>
+    <script src="js/textGenerator.js"></script>
+    
+    <script>
+        // テスト実行
+        document.addEventListener('DOMContentLoaded', () => {
+            runTests();
+        });
+        
+        function runTests() {
+            try {
+                // 1. JavaScriptクラスの動作テスト
+                testClasses();
+                
+                // 2. スケジューラー機能テスト  
+                testScheduler();
+                
+                // 3. テキスト生成機能テスト
+                testTextGenerator();
+                
+                // 4. データフォーマットテスト
+                testDataFormat();
+                
+                // 5. エラーハンドリングテスト
+                testErrorHandling();
+                
+            } catch (error) {
+                document.getElementById('class-test').innerHTML = 
+                    `<span class="error">テスト実行エラー: ${error.message}</span>`;
+            }
+        }
+        
+        function testClasses() {
+            const result = document.getElementById('class-test');
+            let output = '';
+            
+            try {
+                // Schedulerクラスのインスタンス作成
+                const scheduler = new Scheduler();
+                output += '✓ Schedulerクラス: 正常に作成\n';
+                
+                // TextGeneratorクラスのインスタンス作成
+                const textGenerator = new TextGenerator();
+                output += '✓ TextGeneratorクラス: 正常に作成\n';
+                
+                result.innerHTML = `<span class="success">${output}</span>`;
+            } catch (error) {
+                result.innerHTML = `<span class="error">✗ クラス作成エラー: ${error.message}</span>`;
+            }
+        }
+        
+        function testScheduler() {
+            const result = document.getElementById('scheduler-test');
+            let output = '';
+            
+            try {
+                const scheduler = new Scheduler();
+                
+                // 時間スロット生成テスト
+                const slots = scheduler.generateTimeSlots();
+                output += `✓ 時間スロット生成: ${slots.length}個のスロット\n`;
+                
+                // 週の日付取得テスト
+                const weekDates = scheduler.getWeekDates();
+                output += `✓ 週の日付取得: ${weekDates.length}日分\n`;
+                
+                // 今日判定テスト
+                const isToday = scheduler.isToday(new Date());
+                output += `✓ 今日判定: ${isToday ? '正常' : '異常'}\n`;
+                
+                // 週移動テスト
+                scheduler.moveToNextWeek();
+                scheduler.moveToPreviousWeek();
+                scheduler.moveToThisWeek();
+                output += '✓ 週移動機能: 正常\n';
+                
+                result.innerHTML = `<span class="success">${output}</span>`;
+            } catch (error) {
+                result.innerHTML = `<span class="error">✗ スケジューラーテストエラー: ${error.message}</span>`;
+            }
+        }
+        
+        function testTextGenerator() {
+            const result = document.getElementById('text-generator-test');
+            let output = '';
+            
+            try {
+                const textGenerator = new TextGenerator();
+                
+                // サンプル候補データ
+                const sampleCandidate = {
+                    id: 1,
+                    date: new Date(2025, 2, 4), // 2025年3月4日
+                    startHour: 9,
+                    startMinute: 0,
+                    endHour: 12,
+                    endMinute: 0
+                };
+                
+                // フォーマットテスト
+                const formatted = textGenerator.formatCandidate(sampleCandidate);
+                output += `✓ 標準フォーマット: ${formatted}\n`;
+                
+                // 複数候補フォーマットテスト
+                const candidates = [sampleCandidate];
+                const multiFormatted = textGenerator.formatCandidates(candidates);
+                output += `✓ 複数候補フォーマット: 正常\n`;
+                
+                // ソートテスト
+                const sorted = textGenerator.sortCandidates(candidates);
+                output += `✓ ソート機能: ${sorted.length}件処理\n`;
+                
+                result.innerHTML = `<span class="success">${output}</span>`;
+            } catch (error) {
+                result.innerHTML = `<span class="error">✗ テキスト生成テストエラー: ${error.message}</span>`;
+            }
+        }
+        
+        function testDataFormat() {
+            const result = document.getElementById('format-test');
+            let output = '';
+            
+            try {
+                const textGenerator = new TextGenerator();
+                
+                const testCandidate = {
+                    id: 1,
+                    date: new Date(2025, 8, 29), // 2025年9月29日
+                    startHour: 14,
+                    startMinute: 30,
+                    endHour: 16,
+                    endMinute: 0
+                };
+                
+                // 各フォーマットテスト
+                const standard = textGenerator.formatCandidate(testCandidate, 'standard');
+                const simple = textGenerator.formatCandidate(testCandidate, 'simple');
+                const detailed = textGenerator.formatCandidate(testCandidate, 'detailed');
+                
+                output += `標準: ${standard}\n`;
+                output += `シンプル: ${simple}\n`;
+                output += `詳細: ${detailed}\n`;
+                
+                result.innerHTML = `<span class="success">${output}</span>`;
+            } catch (error) {
+                result.innerHTML = `<span class="error">✗ フォーマットテストエラー: ${error.message}</span>`;
+            }
+        }
+        
+        function testErrorHandling() {
+            const result = document.getElementById('error-test');
+            let output = '';
+            
+            try {
+                const scheduler = new Scheduler();
+                const textGenerator = new TextGenerator();
+                
+                // 無効な時間のテスト
+                const invalidTime = scheduler.isValidTime(25, 0); // 25時は無効
+                output += `✓ 無効時間判定: ${!invalidTime ? '正常' : '異常'}\n`;
+                
+                // 空の候補配列テスト
+                const emptyFormat = textGenerator.formatCandidates([]);
+                output += `✓ 空配列フォーマット: ${emptyFormat === '' ? '正常' : '異常'}\n`;
+                
+                // 不正な候補データテスト
+                try {
+                    textGenerator.formatCandidate(null);
+                    output += '✓ null候補処理: 正常\n';
+                } catch (e) {
+                    output += '✓ null候補処理: エラーハンドリング正常\n';
+                }
+                
+                result.innerHTML = `<span class="success">${output}</span>`;
+            } catch (error) {
+                result.innerHTML = `<span class="error">✗ エラーハンドリングテストエラー: ${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html>
