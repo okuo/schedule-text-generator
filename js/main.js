@@ -160,7 +160,7 @@ class ScheduleApp {
             // 既存のクラスをクリア
             headerElement.classList.remove('today', 'saturday', 'sunday', 'holiday');
             if (columnElement) {
-                columnElement.classList.remove('saturday', 'sunday', 'holiday');
+                columnElement.classList.remove('today', 'saturday', 'sunday', 'holiday');
             }
             
             // 今日かどうかチェック
@@ -197,6 +197,7 @@ class ScheduleApp {
         };
         this.selectionEnd = { ...this.selectionStart };
         this.updateSelectionDisplay();
+        this.showDragTimeDisplay(event);
     }
     
     // 選択更新
@@ -211,6 +212,7 @@ class ScheduleApp {
         if (day === this.selectionStart.day) {
             this.selectionEnd = { day, hour, minute };
             this.updateSelectionDisplay();
+            this.updateDragTimeDisplay(event);
         }
     }
     
@@ -225,6 +227,7 @@ class ScheduleApp {
         }
         
         this.clearSelectionDisplay();
+        this.hideDragTimeDisplay();
     }
     
     // 選択表示を更新
@@ -259,6 +262,7 @@ class ScheduleApp {
         document.querySelectorAll('.time-cell').forEach(cell => {
             cell.classList.remove('selecting');
         });
+        this.hideDragTimeDisplay();
     }
     
     // 候補を追加
@@ -268,10 +272,16 @@ class ScheduleApp {
         const startTime = this.selectionStart.hour * 60 + this.selectionStart.minute;
         const endTime = this.selectionEnd.hour * 60 + this.selectionEnd.minute;
         
-        if (startTime === endTime) return; // 同じ時間は追加しない
+        let minTime = Math.min(startTime, endTime);
+        let maxTime = Math.max(startTime, endTime);
         
-        const minTime = Math.min(startTime, endTime);
-        const maxTime = Math.max(startTime, endTime);
+        // 同じ時間の場合は15分間隔で終了時間を設定
+        if (startTime === endTime) {
+            maxTime = minTime + 15;
+        } else {
+            // ドラッグの場合、終了時刻に15分を追加（選択した最後のマスも含める）
+            maxTime = maxTime + 15;
+        }
         
         // 日付を計算
         const weekDates = this.scheduler.getWeekDates();
@@ -307,6 +317,7 @@ class ScheduleApp {
             const cellMinute = parseInt(cell.dataset.minute);
             const cellMinutes = cellHour * 60 + cellMinute;
             
+            // 常に終了時刻は含めない（時間計算で15分追加済みのため）
             if (cellMinutes >= startMinutes && cellMinutes < endMinutes) {
                 cell.classList.add('selected');
                 cell.dataset.candidateId = candidate.id;
@@ -444,6 +455,50 @@ class ScheduleApp {
                 this.markSelectedCells(updatedCandidate);
             }
         });
+    }
+    
+    // ドラッグ時間表示を表示
+    showDragTimeDisplay(event) {
+        const display = document.getElementById('drag-time-display');
+        display.style.display = 'block';
+        this.updateDragTimeDisplay(event);
+    }
+    
+    // ドラッグ時間表示を更新
+    updateDragTimeDisplay(event) {
+        if (!this.selectionStart || !this.selectionEnd) return;
+        
+        const display = document.getElementById('drag-time-display');
+        
+        // 時間範囲を計算
+        const startTime = this.selectionStart.hour * 60 + this.selectionStart.minute;
+        const endTime = this.selectionEnd.hour * 60 + this.selectionEnd.minute;
+        let minTime = Math.min(startTime, endTime);
+        let maxTime = Math.max(startTime, endTime);
+        
+        // 同じ時間の場合は15分間隔で終了時間を設定
+        if (startTime === endTime) {
+            maxTime = minTime + 15;
+        }
+        
+        // 時間を文字列に変換
+        const startHour = Math.floor(minTime / 60);
+        const startMinute = minTime % 60;
+        const endHour = Math.floor(maxTime / 60);
+        const endMinute = maxTime % 60;
+        
+        const timeText = `${startHour}:${String(startMinute).padStart(2, '0')}〜${endHour}:${String(endMinute).padStart(2, '0')}`;
+        display.textContent = timeText;
+        
+        // マウス位置に表示
+        display.style.left = (event.clientX + 15) + 'px';
+        display.style.top = (event.clientY - 30) + 'px';
+    }
+    
+    // ドラッグ時間表示を隠す
+    hideDragTimeDisplay() {
+        const display = document.getElementById('drag-time-display');
+        display.style.display = 'none';
     }
 }
 
