@@ -36,10 +36,9 @@ class TextGenerator {
         }
     }
     
-    // 標準フォーマット: 2025年3月4日（火） 9:00〜12:00
+    // 標準フォーマット: 3月4日（火） 9:00〜12:00
     formatStandard(candidate) {
         const date = candidate.date;
-        const year = date.getFullYear();
         const month = date.getMonth() + 1;
         const day = date.getDate();
         const weekday = this.weekdays[date.getDay()];
@@ -47,7 +46,7 @@ class TextGenerator {
         const startTime = this.formatTime(candidate.startHour, candidate.startMinute);
         const endTime = this.formatTime(candidate.endHour, candidate.endMinute);
         
-        return `${year}年${month}月${day}日（${weekday}） ${startTime}〜${endTime}`;
+        return `${month}月${day}日（${weekday}） ${startTime}〜${endTime}`;
     }
     
     // シンプルフォーマット: 3/4（火） 9:00〜12:00
