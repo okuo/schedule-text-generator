@@ -1,0 +1,75 @@
+name: Update Holiday Data
+
+on:
+  # 毎年12月1日午前0時（UTC）に実行
+  schedule:
+    - cron: '0 0 1 12 *'
+  # 手動実行も可能
+  workflow_dispatch:
+
+jobs:
+  update-holidays:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Create assets directory
+      run: mkdir -p assets
+        
+    - name: Fetch holiday data
+      run: node scripts/fetch-holidays.js
+      
+    - name: Check for changes
+      id: check-changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        if [[ `git status --porcelain` ]]; then
+          echo "changes=true" >> $GITHUB_OUTPUT
+          echo "Changes detected in holiday data"
+        else
+          echo "changes=false" >> $GITHUB_OUTPUT
+          echo "No changes in holiday data"
+        fi
+        
+    - name: Create Pull Request
+      if: steps.check-changes.outputs.changes == 'true'
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "feat: Update holiday data for next year"
+        title: "🎌 Update Holiday Data"
+        body: |
+          ## 祝日データの自動更新
+          
+          内閣府の公式CSVデータから最新の祝日情報を取得し、更新しました。
+          
+          ### 変更内容
+          - `assets/holidays.json` の更新
+          - 複数年分の祝日データを含む（今年・来年・再来年）
+          
+          ### データソース
+          - [内閣府「国民の祝日」について](https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html)
+          - CSV URL: https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv
+          
+          このPRは GitHub Actions により自動生成されました。
+          
+          🤖 Generated with GitHub Actions
+        branch: update-holidays-${{ github.run_number }}
+        delete-branch: true
+        
+    - name: Log completion
+      run: |
+        if [[ "${{ steps.check-changes.outputs.changes }}" == "true" ]]; then
+          echo "✅ Holiday data updated and PR created"
+        else
+          echo "ℹ️ No changes needed - holiday data is up to date"
+        fi

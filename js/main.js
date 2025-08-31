@@ -11,10 +11,27 @@ class ScheduleApp {
         this.init();
     }
     
-    init() {
+    async init() {
+        // 祝日サービスを初期化
+        await this.initializeHolidayService();
+        
         this.setupEventListeners();
         this.renderCalendar();
         this.updateWeekDisplay();
+    }
+    
+    // 祝日サービスを初期化
+    async initializeHolidayService() {
+        try {
+            if (window.holidayService) {
+                await window.holidayService.initialize();
+                console.log('✅ 祝日サービスの初期化完了');
+            } else {
+                console.warn('⚠️ HolidayService が利用できません');
+            }
+        } catch (error) {
+            console.error('❌ 祝日サービスの初期化エラー:', error.message);
+        }
     }
     
     setupEventListeners() {
@@ -503,6 +520,11 @@ class ScheduleApp {
 }
 
 // アプリケーション初期化
-document.addEventListener('DOMContentLoaded', () => {
-    new ScheduleApp();
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const app = new ScheduleApp();
+        // 非同期初期化のため、awaitは不要（コンストラクタ内で処理）
+    } catch (error) {
+        console.error('❌ アプリケーションの初期化エラー:', error);
+    }
 });

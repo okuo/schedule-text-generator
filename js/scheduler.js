@@ -126,58 +126,35 @@ class Scheduler {
         return date.getDay() === 0;
     }
     
-    // 祝日かどうかチェック（基本的な日本の祝日）
+    // 祝日かどうかチェック（HolidayServiceに委譲）
     isHoliday(date) {
-        const year = date.getFullYear();
+        // HolidayServiceが利用可能かチェック
+        if (window.holidayService && window.holidayService.isInitialized) {
+            return window.holidayService.isHoliday(date);
+        }
+        
+        // フォールバック: 基本的な固定祝日のみ（HolidayService初期化前）
+        console.warn('⚠️ HolidayService が未初期化、基本祝日のみで判定');
+        return this._fallbackHolidayCheck(date);
+    }
+    
+    // フォールバック用の基本祝日チェック
+    _fallbackHolidayCheck(date) {
         const month = date.getMonth() + 1;
         const day = date.getDate();
         
-        // 固定祝日
-        const fixedHolidays = [
+        // 最低限の固定祝日
+        const basicHolidays = [
             '1-1',   // 元日
-            '2-11',  // 建国記念の日
-            '4-29',  // 昭和の日
             '5-3',   // 憲法記念日
             '5-4',   // みどりの日
             '5-5',   // こどもの日
-            '8-11',  // 山の日
             '11-3',  // 文化の日
             '11-23', // 勤労感謝の日
-            '12-23'  // 天皇誕生日
         ];
         
         const dateKey = `${month}-${day}`;
-        if (fixedHolidays.includes(dateKey)) {
-            return true;
-        }
-        
-        // 成人の日（1月第2月曜日）
-        if (month === 1) {
-            const firstMonday = this.getNthWeekdayOfMonth(year, 1, 1, 1);
-            const secondMonday = new Date(firstMonday);
-            secondMonday.setDate(firstMonday.getDate() + 7);
-            if (date.getDate() === secondMonday.getDate()) return true;
-        }
-        
-        // 海の日（7月第3月曜日）
-        if (month === 7) {
-            const thirdMonday = this.getNthWeekdayOfMonth(year, 7, 1, 3);
-            if (date.getDate() === thirdMonday.getDate()) return true;
-        }
-        
-        // 敬老の日（9月第3月曜日）
-        if (month === 9) {
-            const thirdMonday = this.getNthWeekdayOfMonth(year, 9, 1, 3);
-            if (date.getDate() === thirdMonday.getDate()) return true;
-        }
-        
-        // 体育の日/スポーツの日（10月第2月曜日）
-        if (month === 10) {
-            const secondMonday = this.getNthWeekdayOfMonth(year, 10, 1, 2);
-            if (date.getDate() === secondMonday.getDate()) return true;
-        }
-        
-        return false;
+        return basicHolidays.includes(dateKey);
     }
     
     // 指定月の第N曜日を取得
