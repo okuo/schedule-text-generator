@@ -43,31 +43,17 @@ jobs:
           echo "No changes in holiday data"
         fi
         
-    - name: Create Pull Request
+    - name: Push changes to update branch
       if: steps.check-changes.outputs.changes == 'true'
-      uses: peter-evans/create-pull-request@v5
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        commit-message: "feat: Update holiday data for next year"
-        title: "🎌 Update Holiday Data"
-        body: |
-          ## 祝日データの自動更新
-          
-          内閣府の公式CSVデータから最新の祝日情報を取得し、更新しました。
-          
-          ### 変更内容
-          - `assets/holidays.json` の更新
-          - 複数年分の祝日データを含む（今年・来年・再来年）
-          
-          ### データソース
-          - [内閣府「国民の祝日」について](https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html)
-          - CSV URL: https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv
-          
-          このPRは GitHub Actions により自動生成されました。
-          
-          🤖 Generated with GitHub Actions
-        branch: update-holidays-${{ github.run_number }}
-        delete-branch: true
+      run: |
+        git checkout -b update-holidays-${{ github.run_number }}
+        git push origin update-holidays-${{ github.run_number }}
+        
+    - name: Display branch information
+      if: steps.check-changes.outputs.changes == 'true'
+      run: |
+        echo "✅ Changes pushed to branch: update-holidays-${{ github.run_number }}"
+        echo "🔗 Create PR manually at: https://github.com/${{ github.repository }}/compare/update-holidays-${{ github.run_number }}"
         
     - name: Log completion
       run: |
