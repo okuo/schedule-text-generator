@@ -55,6 +55,7 @@ class HolidayFetcher {
         const lines = csvText.split('\n');
         const holidays = {};
         let totalCount = 0;
+        const currentYear = new Date().getFullYear(); // 2025年
 
         // ヘッダー行をスキップ
         for (let i = 1; i < lines.length; i++) {
@@ -72,6 +73,11 @@ class HolidayFetcher {
             const year = parseInt(dateParts[0]);
             const month = parseInt(dateParts[1]);
             const day = parseInt(dateParts[2]);
+
+            // 今年以前の祝日はスキップ（スケジュール調整用途のため）
+            if (year < currentYear) {
+                continue;
+            }
 
             // 有効な日付かチェック
             const dateObj = new Date(year, month - 1, day);
@@ -103,7 +109,7 @@ class HolidayFetcher {
             holidays[year].sort((a, b) => a.date.localeCompare(b.date));
         });
 
-        console.log(`✅ パース完了: ${totalCount}件の祝日データ`);
+        console.log(`✅ パース完了: ${totalCount}件の祝日データ（${currentYear}年以降）`);
         console.log(`📅 年数: ${Object.keys(holidays).length}年分`);
 
         return holidays;
