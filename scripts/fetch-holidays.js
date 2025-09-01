@@ -24,13 +24,25 @@ class HolidayFetcher {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
-            const csvText = await response.text();
+            // バイナリデータとして取得してShift_JISとしてデコード
+            const buffer = await response.arrayBuffer();
+            const decoder = new TextDecoder('shift_jis');
+            const csvText = decoder.decode(buffer);
+            
             console.log('✅ CSVデータの取得完了');
             return csvText;
             
         } catch (error) {
             console.error('❌ CSVデータの取得に失敗:', error.message);
-            throw error;
+            // Shift_JISデコードに失敗した場合はUTF-8で再試行
+            try {
+                console.log('⚠️ Shift_JISデコードに失敗、UTF-8で再試行...');
+                const response = await fetch(this.csvUrl);
+                const csvText = await response.text();
+                return csvText;
+            } catch (fallbackError) {
+                throw new Error(`CSVデータの取得に失敗: ${error.message}`);
+            }
         }
     }
 
