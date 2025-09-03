@@ -105,7 +105,8 @@ body {
     display: flex;
     flex-direction: column;
     min-width: 700px;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 /* 統合されたカレンダー */
@@ -116,7 +117,9 @@ body {
     background: #cbd5e1;
     border-radius: 8px;
     overflow-y: auto;
+    overflow-x: visible;
     flex: 1;
+    min-width: 680px; /* 80px + 7 * 85px (最小列幅) */
 }
 
 /* カレンダーヘッダー */
@@ -574,6 +577,15 @@ body {
 @media (max-width: 768px) {
     .container {
         padding: 12px;
+    }
+    
+    .calendar-container {
+        min-width: 600px; /* モバイルでも最小幅を確保 */
+    }
+    
+    .calendar-unified {
+        grid-template-columns: 60px repeat(7, 1fr);
+        min-width: 540px; /* 60px + 7 * 65px (モバイル最小列幅) */
     }
     
     .calendar-header {
