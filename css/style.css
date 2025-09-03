@@ -288,7 +288,8 @@ body {
 }
 
 .time-slot:last-child {
-    border-bottom: none;
+    border-bottom: 2px solid #cbd5e1;
+    border-radius: 0 0 0 8px;
 }
 
 .time-slot.hour-mark {
@@ -400,6 +401,16 @@ body {
 .time-cell:last-child {
     border-bottom: none;
 }
+
+/* 最下段の境界線を追加 */
+.day-column .time-cell:last-child {
+    border-bottom: 2px solid #cbd5e1;
+}
+
+.day-column:last-child .time-cell:last-child {
+    border-radius: 0 0 8px 0;
+}
+
 
 /* 出力セクション */
 .output-section {

@@ -43,11 +43,8 @@ class Scheduler {
     generateTimeSlots() {
         const slots = [];
         
-        for (let hour = this.timeRange.startHour; hour <= this.timeRange.endHour; hour++) {
+        for (let hour = this.timeRange.startHour; hour < this.timeRange.endHour; hour++) {
             for (let minute = 0; minute < 60; minute += this.timeRange.minuteInterval) {
-                // 最後の時間は22:00まで
-                if (hour === this.timeRange.endHour && minute > 0) break;
-                
                 slots.push({
                     hour: hour,
                     minute: minute,

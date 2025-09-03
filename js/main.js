@@ -629,6 +629,9 @@ class ScheduleApp {
         // 同じ時間の場合は15分間隔で終了時間を設定
         if (startTime === endTime) {
             maxTime = minTime + 15;
+        } else {
+            // ドラッグの場合、終了時刻に15分を追加（選択した最後のマスも含める）
+            maxTime = maxTime + 15;
         }
         
         // 時間を文字列に変換
