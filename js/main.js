@@ -262,9 +262,33 @@ class ScheduleApp {
         });
     }
     
+    // セルが既に選択されているかチェック
+    isSelectedCell(cell) {
+        return cell.classList.contains('selected') && cell.dataset.candidateId;
+    }
+
+    // 選択されたセルに対応する候補を見つける
+    findCandidateByCell(cell) {
+        const candidateId = parseInt(cell.dataset.candidateId);
+        return this.selectedCandidates.find(candidate => candidate.id === candidateId);
+    }
+
     // 選択開始
     startSelection(event) {
         event.preventDefault();
+        
+        const cell = event.target;
+        
+        // 既に選択されているセルをクリックした場合はトグル（解除）
+        if (this.isSelectedCell(cell)) {
+            const candidate = this.findCandidateByCell(cell);
+            if (candidate) {
+                this.removeCandidate(candidate.id);
+            }
+            return; // ドラッグ選択は開始しない
+        }
+        
+        // 通常のドラッグ選択開始
         this.isSelecting = true;
         this.selectionStart = {
             day: parseInt(event.target.dataset.day),

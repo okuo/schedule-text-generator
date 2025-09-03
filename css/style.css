@@ -703,3 +703,130 @@ body {
         text-align: center;
     }
 }
+
+/* iPhone用の最適化（480px以下） */
+@media (max-width: 480px) {
+    .container {
+        padding: 8px;
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    /* ヘッダーをコンパクトに */
+    .header {
+        padding: 8px 12px;
+        margin-bottom: 8px;
+    }
+    
+    .header h1 {
+        font-size: 18px;
+        margin-bottom: 8px;
+    }
+    
+    .week-navigation h2 {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+    
+    .nav-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    /* メインコンテンツを縦並びに */
+    .main-content {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    /* カレンダーを画面幅に最適化 */
+    .calendar-container {
+        min-width: unset;
+        width: 100%;
+        overflow-x: auto;
+    }
+    
+    .calendar-unified {
+        grid-template-columns: 40px repeat(7, minmax(45px, 1fr));
+        min-width: calc(100vw - 32px); /* コンテナのパディング分を引く */
+        width: 100%;
+        gap: 0px;
+    }
+    
+    /* 時間軸をコンパクトに */
+    .time-column-header {
+        padding: 8px 4px;
+        font-size: 10px;
+    }
+    
+    .time-slot {
+        height: 10px;
+        font-size: 9px;
+    }
+    
+    .time-slot.hour-mark {
+        height: 40px;
+        font-size: 10px;
+        padding-top: 2px;
+    }
+    
+    /* 日付ヘッダーをコンパクトに */
+    .day-header {
+        padding: 6px 2px;
+        min-height: 60px;
+    }
+    
+    .day-name {
+        font-size: 12px;
+        margin-bottom: 2px;
+    }
+    
+    .day-date {
+        font-size: 11px;
+    }
+    
+    /* セルサイズをタッチ操作に適したサイズに */
+    .time-cell {
+        height: 10px;
+        min-height: 10px;
+    }
+    
+    /* 出力セクションもコンパクトに */
+    .output-section {
+        height: auto;
+        min-height: 300px;
+    }
+    
+    .output-section h3 {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+    
+    .description {
+        font-size: 12px;
+        padding: 8px;
+        margin-bottom: 8px;
+    }
+    
+    .candidates-display {
+        min-height: 80px;
+        font-size: 14px;
+        padding: 10px;
+    }
+    
+    .candidate-line {
+        padding: 6px 0;
+    }
+    
+    .copy-btn,
+    .reset-btn {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+    
+    /* ドラッグ時間表示もコンパクトに */
+    .drag-time-display {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+}
