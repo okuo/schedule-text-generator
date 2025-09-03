@@ -87,8 +87,11 @@ class HolidayFetcher {
                 continue;
             }
 
-            // ISO形式の日付文字列を生成
-            const isoDate = dateObj.toISOString().split('T')[0];
+            // ISO形式の日付文字列を生成（タイムゾーン問題を回避）
+            const isoYear = dateObj.getFullYear();
+            const isoMonth = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const isoDay = String(dateObj.getDate()).padStart(2, '0');
+            const isoDate = `${isoYear}-${isoMonth}-${isoDay}`;
             const holidayName = nameStr.replace(/"/g, '').trim();
 
             // 年別にグループ化
