@@ -108,6 +108,49 @@ class TextGenerator {
         });
     }
     
+    // 連続する時間枠を結合
+    mergeContinuousCandidates(candidates) {
+        if (!Array.isArray(candidates) || candidates.length === 0) {
+            return [];
+        }
+        
+        const sorted = this.sortCandidates(candidates);
+        const merged = [];
+        let current = null;
+        
+        for (let i = 0; i < sorted.length; i++) {
+            const candidate = sorted[i];
+            
+            if (current === null) {
+                // 最初の候補をコピーして開始
+                current = { ...candidate };
+                continue;
+            }
+            
+            // 同じ日で連続する時間かチェック
+            if (this.getDateKey(current.date) === this.getDateKey(candidate.date) &&
+                current.endHour === candidate.startHour &&
+                current.endMinute === candidate.startMinute) {
+                
+                // 連続している場合、終了時間を更新
+                current.endHour = candidate.endHour;
+                current.endMinute = candidate.endMinute;
+                
+            } else {
+                // 連続していない場合、現在の枠を保存して新しい枠を開始
+                merged.push(current);
+                current = { ...candidate };
+            }
+        }
+        
+        // 最後の枠を追加
+        if (current !== null) {
+            merged.push(current);
+        }
+        
+        return merged;
+    }
+    
     // 日付でグループ化
     groupByDate(candidates) {
         const groups = new Map();

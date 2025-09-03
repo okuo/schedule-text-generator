@@ -372,7 +372,10 @@ class ScheduleApp {
         
         candidatesDisplay.innerHTML = '';
         
-        this.selectedCandidates.forEach(candidate => {
+        // 連続する時間枠を結合
+        const mergedCandidates = this.textGenerator.mergeContinuousCandidates(this.selectedCandidates);
+        
+        mergedCandidates.forEach(candidate => {
             const line = document.createElement('div');
             line.className = 'candidate-line';
             
@@ -384,7 +387,8 @@ class ScheduleApp {
             removeBtn.className = 'remove-btn';
             removeBtn.textContent = '削除';
             removeBtn.addEventListener('click', () => {
-                this.removeCandidate(candidate.id);
+                // 結合された時間枠に対応する全ての個別候補を削除
+                this.removeMergedCandidate(candidate);
             });
             
             line.appendChild(text);
@@ -397,6 +401,36 @@ class ScheduleApp {
     removeCandidate(id) {
         this.clearSelectedCells(id);
         this.selectedCandidates = this.selectedCandidates.filter(c => c.id !== id);
+        this.updateCandidatesList();
+        this.updateOutputText();
+    }
+    
+    // 結合された候補に対応する全ての個別候補を削除
+    removeMergedCandidate(mergedCandidate) {
+        const startMinutes = mergedCandidate.startHour * 60 + mergedCandidate.startMinute;
+        const endMinutes = mergedCandidate.endHour * 60 + mergedCandidate.endMinute;
+        const dateKey = this.textGenerator.getDateKey(mergedCandidate.date);
+        
+        // 同じ日付で時間範囲内の全ての候補を特定
+        const candidatesToRemove = this.selectedCandidates.filter(candidate => {
+            const candidateStart = candidate.startHour * 60 + candidate.startMinute;
+            const candidateEnd = candidate.endHour * 60 + candidate.endMinute;
+            const candidateDateKey = this.textGenerator.getDateKey(candidate.date);
+            
+            return candidateDateKey === dateKey &&
+                   candidateStart >= startMinutes &&
+                   candidateEnd <= endMinutes;
+        });
+        
+        // 特定された候補を全て削除
+        candidatesToRemove.forEach(candidate => {
+            this.clearSelectedCells(candidate.id);
+        });
+        
+        this.selectedCandidates = this.selectedCandidates.filter(candidate => {
+            return !candidatesToRemove.includes(candidate);
+        });
+        
         this.updateCandidatesList();
         this.updateOutputText();
     }
@@ -420,7 +454,9 @@ class ScheduleApp {
         
         if (this.selectedCandidates.length === 0) return;
         
-        const textToCopy = this.textGenerator.formatCandidates(this.selectedCandidates);
+        // 連続する時間枠を結合してからフォーマット
+        const mergedCandidates = this.textGenerator.mergeContinuousCandidates(this.selectedCandidates);
+        const textToCopy = this.textGenerator.formatCandidates(mergedCandidates);
         
         try {
             await navigator.clipboard.writeText(textToCopy);
