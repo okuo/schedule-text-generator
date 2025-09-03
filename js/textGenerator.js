@@ -24,6 +24,11 @@ class TextGenerator {
             return '';
         }
         
+        // 終日の場合は特別なフォーマット
+        if (candidate.isFullDay) {
+            return this.formatFullDay(candidate, format);
+        }
+        
         switch (format) {
             case 'standard':
                 return this.formatStandard(candidate);
@@ -74,6 +79,28 @@ class TextGenerator {
         const endTime = this.formatTime(candidate.endHour, candidate.endMinute, true);
         
         return `${year}年${month}月${day}日（${weekday}） ${startTime}〜${endTime}`;
+    }
+    
+    // 終日フォーマット: 9月4日（木）
+    formatFullDay(candidate, format = 'standard') {
+        const date = candidate.date;
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const weekday = this.weekdays[date.getDay()];
+        
+        switch (format) {
+            case 'standard':
+                return `${month}月${day}日（${weekday}）`;
+            case 'simple':
+                return `${month}/${day}（${weekday}）`;
+            case 'detailed':
+                const monthStr = String(month).padStart(2, '0');
+                const dayStr = String(day).padStart(2, '0');
+                return `${year}年${monthStr}月${dayStr}日（${weekday}曜日）`;
+            default:
+                return `${month}月${day}日（${weekday}）`;
+        }
     }
     
     // 時間をフォーマット

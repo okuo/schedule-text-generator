@@ -15,7 +15,7 @@ body {
 .container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 8px 16px;
+    padding: 4px 16px;
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -26,17 +26,17 @@ body {
 .header {
     background: white;
     border-radius: 12px;
-    padding: 12px 16px;
-    margin-bottom: 8px;
+    padding: 8px 16px;
+    margin-bottom: 6px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
 }
 
 .header h1 {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 600;
     color: #1e293b;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .week-navigation {
@@ -83,7 +83,7 @@ body {
 .main-content {
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 12px;
+    gap: 8px;
     flex: 1;
     overflow: hidden;
 }
@@ -146,15 +146,36 @@ body {
     position: sticky;
     top: 0;
     z-index: 10;
+    cursor: pointer;
+    transition: background-color 0.2s;
 }
 
 .day-header:last-child {
     border-radius: 0 8px 0 0;
 }
 
-.day-header.today {
+.day-header:hover:not(.today):not(.saturday):not(.sunday):not(.holiday):not(.selected) {
+    background: #f8fafc;
+}
+
+.day-header.selected {
     background: #ecfdf5;
-    border-color: #10b981;
+    border: 2px solid #10b981;
+    font-weight: 700;
+}
+
+.day-header.selected .day-name {
+    color: #10b981;
+}
+
+.day-header.selected .day-date {
+    color: #059669;
+}
+
+.day-header.today:not(.selected) {
+    background: white !important;
+    position: relative;
+    font-weight: 700;
 }
 
 .day-name {
@@ -169,12 +190,43 @@ body {
     color: #6b7280;
 }
 
-.day-header.today .day-name {
-    color: #10b981;
+.day-header.today:not(.selected) .day-name {
+    color: #1f2937;
+    font-weight: 800;
 }
 
-.day-header.today .day-date {
-    color: #059669;
+.day-header.today:not(.selected) .day-date {
+    color: #374151;
+    font-weight: 700;
+}
+
+.day-header.today::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 3px;
+    background: linear-gradient(90deg, #64748b, #475569, #64748b);
+    border-radius: 2px;
+    z-index: 20;
+}
+
+/* 今日が土曜日の場合の特別スタイル */
+.day-header.today.saturday {
+    background: white !important;
+    font-weight: 700;
+}
+
+.day-header.today.saturday .day-name {
+    color: #1f2937;
+    font-weight: 800;
+}
+
+.day-header.today.saturday .day-date {
+    color: #374151;
+    font-weight: 700;
 }
 
 .day-header.saturday {
@@ -405,7 +457,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
+    padding: 4px 0;
     border-bottom: 1px solid #f3f4f6;
     color: #374151;
 }
@@ -417,7 +469,7 @@ body {
 .candidate-line:hover {
     background-color: #f9fafb;
     margin: 0 -14px;
-    padding: 8px 14px;
+    padding: 4px 14px;
     border-radius: 4px;
 }
 
@@ -574,6 +626,22 @@ body {
     }
 }
 
+/* アニメーション定義 */
+@keyframes todayUnderlinePulse {
+    0% {
+        width: 30%;
+        opacity: 0.6;
+    }
+    50% {
+        width: 80%;
+        opacity: 1;
+    }
+    100% {
+        width: 30%;
+        opacity: 0.6;
+    }
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 12px;
@@ -612,6 +680,7 @@ body {
     .day-date {
         font-size: 12px;
     }
+    
     
     .time-cell {
         height: 8px;

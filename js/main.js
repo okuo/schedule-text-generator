@@ -78,6 +78,60 @@ class ScheduleApp {
         this.renderTimeColumn();
         this.renderDaysGrid();
         this.updateDateHeaders();
+        this.setupDayHeaderClickEvents(); // カレンダー再描画後にイベントを再設定
+    }
+    
+    // 日付ヘッダーのクリックイベントを設定
+    setupDayHeaderClickEvents() {
+        document.querySelectorAll('.day-header').forEach((header, index) => {
+            header.addEventListener('click', (e) => {
+                // 時間セルのクリックイベントと競合しないようにする
+                e.stopPropagation();
+                this.selectFullDay(index);
+            });
+        });
+    }
+    
+    // 指定した日を終日選択/解除
+    selectFullDay(dayIndex) {
+        const weekDates = this.scheduler.getWeekDates();
+        const selectedDate = weekDates[dayIndex];
+        const dayHeader = document.querySelector(`.day-header[data-day="${dayIndex}"]`);
+        
+        // 既に選択されているかチェック
+        const existingCandidate = this.selectedCandidates.find(candidate => {
+            return candidate.isFullDay && 
+                   candidate.dayOffset === dayIndex &&
+                   this.textGenerator.getDateKey(candidate.date) === this.textGenerator.getDateKey(selectedDate);
+        });
+        
+        if (existingCandidate) {
+            // 既に選択されている場合は解除
+            this.selectedCandidates = this.selectedCandidates.filter(c => c.id !== existingCandidate.id);
+            if (dayHeader) {
+                dayHeader.classList.remove('selected');
+            }
+        } else {
+            // 新規選択
+            const candidate = {
+                id: Date.now(),
+                date: selectedDate,
+                startHour: 9,
+                startMinute: 0,
+                endHour: 18,
+                endMinute: 0,
+                isFullDay: true,
+                dayOffset: dayIndex
+            };
+            
+            this.selectedCandidates.push(candidate);
+            if (dayHeader) {
+                dayHeader.classList.add('selected');
+            }
+        }
+        
+        this.updateCandidatesList();
+        this.updateOutputText();
     }
     
     // 時間軸を描画
@@ -195,10 +249,15 @@ class ScheduleApp {
                 headerElement.classList.add('saturday');
                 if (columnElement) columnElement.classList.add('saturday');
             }
-            // 日曜日チェック
+            // 日曜日チェック  
             else if (this.scheduler.isSunday(date)) {
                 headerElement.classList.add('sunday');
                 if (columnElement) columnElement.classList.add('sunday');
+            }
+            
+            // 今日が土曜日の場合、両方のクラスを適用
+            if (this.scheduler.isToday(date) && this.scheduler.isSaturday(date)) {
+                headerElement.classList.add('saturday');
             }
         });
     }
@@ -422,6 +481,15 @@ class ScheduleApp {
                    candidateEnd <= endMinutes;
         });
         
+        // 終日選択の場合は日付ヘッダーの選択状態を解除
+        const fullDayCandidate = candidatesToRemove.find(c => c.isFullDay);
+        if (fullDayCandidate && fullDayCandidate.dayOffset !== undefined) {
+            const dayHeader = document.querySelector(`.day-header[data-day="${fullDayCandidate.dayOffset}"]`);
+            if (dayHeader) {
+                dayHeader.classList.remove('selected');
+            }
+        }
+        
         // 特定された候補を全て削除
         candidatesToRemove.forEach(candidate => {
             this.clearSelectedCells(candidate.id);
@@ -491,6 +559,11 @@ class ScheduleApp {
         this.updateCandidatesList();
         this.updateOutputText();
         this.clearSelectionDisplay();
+        
+        // 日付ヘッダーの選択状態もクリア
+        document.querySelectorAll('.day-header.selected').forEach(header => {
+            header.classList.remove('selected');
+        });
     }
     
     // 選択セルを再適用（週移動時）
