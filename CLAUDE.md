@@ -12,24 +12,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **ローカルサーバー起動**: `python -m http.server 8000` または `npx serve .`
 - **ファイル監視**: Live Server拡張機能を使用するかブラウザで直接HTMLファイルを開く
 
+### 祝日データ管理
+- **祝日データ更新**: `node scripts/fetch-holidays.js`
+- **GitHub Actions実行**: 手動で「Update Holiday Data」ワークフローを実行
+- **自動更新**: 毎年12月1日午前0時（UTC）に自動実行
+
 ### テスト
 - **単体テスト**: テストフレームワークが設定されている場合、通常のJavaScriptテスト実行
 - **ブラウザテスト**: 開発者ツールのコンソールでテスト
+- **祝日データテスト**: ローカルサーバー起動後にブラウザで祝日表示を確認
 
 ## アーキテクチャ
 
 ### ディレクトリ構造
-典型的な構造:
 ```
 /
 ├── index.html          # メインエントリーポイント
+├── .github/workflows/  # GitHub Actions設定
+│   └── update-holidays.yml # 祝日データ自動更新
+├── scripts/           # Node.jsスクリプト
+│   └── fetch-holidays.js # 祝日データ取得スクリプト
 ├── css/               # スタイルシート
 │   └── style.css
 ├── js/                # JavaScriptモジュール
 │   ├── main.js        # メインロジック
 │   ├── scheduler.js   # スケジュール処理
-│   └── textGenerator.js # テキスト生成
+│   ├── textGenerator.js # テキスト生成
+│   └── holidayService.js # 祝日判定サービス
 └── assets/            # 静的リソース
+    └── holidays.json  # 祝日データ（自動生成）
 ```
 
 ### 設計パターン
@@ -40,12 +51,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### 主要コンポーネント
 - **Scheduler**: スケジュールデータの管理と操作
 - **TextGenerator**: スケジュールからテキスト形式への変換
+- **HolidayService**: 祝日判定とデータ管理（外部API連携）
 - **UI Controller**: DOM操作とユーザーイベント処理
 
 ### データフロー
-1. ユーザー入力 → スケジュールデータ構造
-2. スケジュールデータ → テキスト生成処理
-3. 生成されたテキスト → UI表示/エクスポート
+1. アプリ起動 → 祝日サービス初期化（外部JSONデータ読み込み）
+2. ユーザー入力 → スケジュールデータ構造
+3. 日付選択 → 祝日判定 → UI表示（カレンダー色分け）
+4. スケジュールデータ → テキスト生成処理
+5. 生成されたテキスト → UI表示/エクスポート
 
 ## 開発時の注意点
 
@@ -59,6 +73,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **ドラッグ選択の整合性**: `updateSelectionDisplay`と`markSelectedCells`の条件は一致させること
 - **時間計算の統一**: シングルクリック（15分）とドラッグ選択で適切に時間範囲を計算
 - **マウスイベントの処理**: ドラッグ中の状態管理と表示更新を同期
+- **祝日サービスの初期化**: `main.js`で`HolidayService`の初期化を確実に行うこと
+- **文字エンコーディング**: 内閣府CSVはShift_JIS形式、適切なデコード処理が必要
 
 ### UI/UXの考慮事項
 - **フォント**: Windows 11の`Segoe UI Variable Display`を優先使用
@@ -67,12 +83,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 最新の実装状況
 
+### v1.3の主要機能（外部API祝日対応）
+- **外部API祝日連携**: 内閣府公式CSVから祝日データを自動取得
+- **GitHub Actions自動化**: 毎年12月1日に祝日データを自動更新
+- **Shift_JIS対応**: 日本語祝日名の文字化け問題を解決
+- **データ最適化**: 現在年以降のデータのみ保持（96%サイズ削減）
+- **HolidayService**: 非同期初期化とフォールバック機能を実装
+
 ### v1.2の主要機能
 - **リアルタイム時間表示**: `showDragTimeDisplay()`でドラッグ中に時間範囲表示
 - **選択精度の改善**: シングルクリックとドラッグ選択の正確な区別
 - **UI最適化**: ヘッダースペース削減、フォントサイズ調整
 
 ### 既知の制約・課題
-- 祝日データがハードコーディング（今後外部API化検討）
 - 同日内選択のみ対応（複数日選択非対応）
 - 9:00-18:00の固定時間範囲
+- GitHub Actions PR作成権限の制約（ブランチ作成のみ、PR作成は手動）
+
+### 祝日データ管理システム
+- **データソース**: 内閣府「国民の祝日」CSV（https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv）
+- **更新頻度**: 年1回（12月1日午前0時UTC）
+- **データ範囲**: 現在年（2025年）以降の祝日のみ
+- **ファイルサイズ**: 約2.8KB（最適化済み）
+- **文字エンコーディング**: Shift_JIS自動デコード対応
+- **フォールバック**: API障害時は基本的な固定祝日で動作
