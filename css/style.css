@@ -101,12 +101,12 @@ body {
 }
 
 .calendar-container {
-    flex: 1;
     display: flex;
     flex-direction: column;
     min-width: 700px;
     overflow-x: auto;
     overflow-y: hidden;
+    height: fit-content;
 }
 
 /* 統合されたカレンダー */
@@ -118,7 +118,7 @@ body {
     border-radius: 8px;
     overflow-y: auto;
     overflow-x: visible;
-    flex: 1;
+    height: fit-content;
     min-width: 680px; /* 80px + 7 * 85px (最小列幅) */
 }
 
@@ -762,6 +762,7 @@ body {
         min-width: calc(100vw - 32px); /* コンテナのパディング分を引く */
         width: 100%;
         gap: 0px;
+        height: fit-content;
     }
     
     /* 時間軸をコンパクトに */
