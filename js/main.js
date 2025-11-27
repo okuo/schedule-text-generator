@@ -235,8 +235,8 @@ class ScheduleApp {
             
             dateElement.textContent = date.getDate();
             
-            // 既存のクラスをクリア
-            headerElement.classList.remove('today', 'saturday', 'sunday', 'holiday');
+            // 既存のクラスをクリア（selectedも含む）
+            headerElement.classList.remove('today', 'saturday', 'sunday', 'holiday', 'selected');
             if (columnElement) {
                 columnElement.classList.remove('today', 'saturday', 'sunday', 'holiday');
             }
