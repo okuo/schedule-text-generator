@@ -61,10 +61,13 @@ class ScheduleApp {
         document.getElementById('copy-btn').addEventListener('click', () => {
             this.copyToClipboard();
         });
-        
+
         document.getElementById('reset-btn').addEventListener('click', () => {
             this.resetAll();
         });
+
+        // 日付ヘッダーのクリックイベント（初回のみ）
+        this.setupDayHeaderClickEvents();
     }
     
     // 週表示を更新
@@ -78,11 +81,13 @@ class ScheduleApp {
         this.renderTimeColumn();
         this.renderDaysGrid();
         this.updateDateHeaders();
-        this.setupDayHeaderClickEvents(); // カレンダー再描画後にイベントを再設定
+        // 日付ヘッダーのイベントは初回のみ設定（setupEventListenersで実行）
     }
-    
-    // 日付ヘッダーのクリックイベントを設定
+
+    // 日付ヘッダーのクリックイベントを設定（初回のみ）
     setupDayHeaderClickEvents() {
+        if (this.dayHeaderClickListenersAdded) return; // 重複防止
+
         document.querySelectorAll('.day-header').forEach((header, index) => {
             header.addEventListener('click', (e) => {
                 // 時間セルのクリックイベントと競合しないようにする
@@ -90,6 +95,8 @@ class ScheduleApp {
                 this.selectFullDay(index);
             });
         });
+
+        this.dayHeaderClickListenersAdded = true;
     }
     
     // 指定した日を終日選択/解除
