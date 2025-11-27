@@ -600,16 +600,29 @@ class ScheduleApp {
     // 選択セルを再適用（週移動時）
     reapplySelectedCells() {
         const currentWeekDates = this.scheduler.getWeekDates();
-        
+
+        // まず全ての日付ヘッダーの選択状態をクリア
+        document.querySelectorAll('.day-header.selected').forEach(header => {
+            header.classList.remove('selected');
+        });
+
         this.selectedCandidates.forEach(candidate => {
             // 候補の日付が現在の週に含まれているかチェック
             const candidateDateStr = candidate.date.toDateString();
             const dayIndex = currentWeekDates.findIndex(date => date.toDateString() === candidateDateStr);
-            
+
             if (dayIndex >= 0) {
                 // 現在の週に含まれている場合、セルをマーク
                 const updatedCandidate = { ...candidate, dayOffset: dayIndex };
                 this.markSelectedCells(updatedCandidate);
+
+                // 終日選択の場合は日付ヘッダーも選択状態にする
+                if (candidate.isFullDay) {
+                    const dayHeader = document.querySelector(`.day-header[data-day="${dayIndex}"]`);
+                    if (dayHeader) {
+                        dayHeader.classList.add('selected');
+                    }
+                }
             }
         });
     }
