@@ -269,6 +269,18 @@ class ScheduleApp {
         });
     }
     
+    // 選択範囲の時間を分単位で計算
+    calculateSelectedTimeRange(includeEndOffset = false) {
+        const startTime = this.selectionStart.hour * 60 + this.selectionStart.minute;
+        const endTime = this.selectionEnd.hour * 60 + this.selectionEnd.minute;
+        const minTime = Math.min(startTime, endTime);
+        let maxTime = Math.max(startTime, endTime);
+        if (includeEndOffset) {
+            maxTime += 15;
+        }
+        return { minTime, maxTime };
+    }
+
     // セルが既に選択されているかチェック
     isSelectedCell(cell) {
         return cell.classList.contains('selected') && cell.dataset.candidateId;
@@ -345,13 +357,9 @@ class ScheduleApp {
         });
         
         if (!this.selectionStart || !this.selectionEnd) return;
-        
-        const startTime = this.selectionStart.hour * 60 + this.selectionStart.minute;
-        const endTime = this.selectionEnd.hour * 60 + this.selectionEnd.minute;
-        
-        const minTime = Math.min(startTime, endTime);
-        const maxTime = Math.max(startTime, endTime);
-        
+
+        const { minTime, maxTime } = this.calculateSelectedTimeRange();
+
         // 選択範囲のセルにクラスを追加
         document.querySelectorAll(`.time-cell[data-day="${this.selectionStart.day}"]`).forEach(cell => {
             const cellHour = parseInt(cell.dataset.hour);
@@ -375,21 +383,9 @@ class ScheduleApp {
     // 候補を追加
     addCandidate() {
         if (!this.selectionStart || !this.selectionEnd) return;
-        
-        const startTime = this.selectionStart.hour * 60 + this.selectionStart.minute;
-        const endTime = this.selectionEnd.hour * 60 + this.selectionEnd.minute;
-        
-        let minTime = Math.min(startTime, endTime);
-        let maxTime = Math.max(startTime, endTime);
-        
-        // 同じ時間の場合は15分間隔で終了時間を設定
-        if (startTime === endTime) {
-            maxTime = minTime + 15;
-        } else {
-            // ドラッグの場合、終了時刻に15分を追加（選択した最後のマスも含める）
-            maxTime = maxTime + 15;
-        }
-        
+
+        const { minTime, maxTime } = this.calculateSelectedTimeRange(true);
+
         // 日付を計算
         const weekDates = this.scheduler.getWeekDates();
         const selectedDate = weekDates[this.selectionStart.day];
@@ -639,21 +635,9 @@ class ScheduleApp {
         if (!this.selectionStart || !this.selectionEnd) return;
         
         const display = document.getElementById('drag-time-display');
-        
-        // 時間範囲を計算
-        const startTime = this.selectionStart.hour * 60 + this.selectionStart.minute;
-        const endTime = this.selectionEnd.hour * 60 + this.selectionEnd.minute;
-        let minTime = Math.min(startTime, endTime);
-        let maxTime = Math.max(startTime, endTime);
-        
-        // 同じ時間の場合は15分間隔で終了時間を設定
-        if (startTime === endTime) {
-            maxTime = minTime + 15;
-        } else {
-            // ドラッグの場合、終了時刻に15分を追加（選択した最後のマスも含める）
-            maxTime = maxTime + 15;
-        }
-        
+
+        const { minTime, maxTime } = this.calculateSelectedTimeRange(true);
+
         // 時間を文字列に変換
         const startHour = Math.floor(minTime / 60);
         const startMinute = minTime % 60;
