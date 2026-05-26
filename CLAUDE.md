@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 開発環境
 - **ローカルサーバー起動**: `python -m http.server 8000` または `npx serve .`
-- **ファイル監視**: Live Server拡張機能を使用するかブラウザで直接HTMLファイルを開く
+- **ファイル監視**: Live Server拡張機能など、HTTPサーバー経由で確認する
 
 ### 祝日データ管理
 - **祝日データ更新**: `node scripts/fetch-holidays.js`
@@ -18,8 +18,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **自動更新**: 毎年12月1日午前0時（UTC）に自動実行
 
 ### テスト
-- **単体テスト**: テストフレームワークが設定されている場合、通常のJavaScriptテスト実行
-- **ブラウザテスト**: 開発者ツールのコンソールでテスト
+- **構文チェック**: `node --check js/main.js`、`node --check js/candidateStore.js`、`node --check js/textGenerator.js`
+- **ブラウザテスト**: ローカルサーバー起動後に `http://localhost:8000/test.html` を開く
 - **祝日データテスト**: ローカルサーバー起動後にブラウザで祝日表示を確認
 
 ## アーキテクチャ
@@ -28,6 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 /
 ├── index.html          # メインエントリーポイント
+├── favicon.ico         # ファビコン
 ├── .github/workflows/  # GitHub Actions設定
 │   └── update-holidays.yml # 祝日データ自動更新
 ├── scripts/           # Node.jsスクリプト
@@ -38,6 +39,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── main.js        # メインロジック
 │   ├── scheduler.js   # スケジュール処理
 │   ├── textGenerator.js # テキスト生成
+│   ├── candidateStore.js # 候補データ管理・永続化
 │   └── holidayService.js # 祝日判定サービス
 └── assets/            # 静的リソース
     └── holidays.json  # 祝日データ（自動生成）
@@ -47,19 +49,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **モジュールパターン**: 機能ごとにJSファイルを分離
 - **イベント駆動**: DOM操作とユーザーインタラクション
 - **関数型アプローチ**: 純粋関数でのデータ変換
+- **ローカル永続化**: `localStorage`で候補日時と出力形式を保存
 
 ### 主要コンポーネント
+- **ScheduleApp**: 画面イベント、描画、コピー処理の統合
 - **Scheduler**: スケジュールデータの管理と操作
 - **TextGenerator**: スケジュールからテキスト形式への変換
+- **CandidateStore**: 候補のID生成、ソート、結合、削除、保存・復元
 - **HolidayService**: 祝日判定とデータ管理（外部API連携）
-- **UI Controller**: DOM操作とユーザーイベント処理
 
 ### データフロー
 1. アプリ起動 → 祝日サービス初期化（外部JSONデータ読み込み）
-2. ユーザー入力 → スケジュールデータ構造
-3. 日付選択 → 祝日判定 → UI表示（カレンダー色分け）
-4. スケジュールデータ → テキスト生成処理
-5. 生成されたテキスト → UI表示/エクスポート
+2. 保存済み候補・出力形式 → `CandidateStore` / `TextGenerator` に復元
+3. ユーザー入力 → 候補データを `CandidateStore` に追加・削除
+4. 日付選択 → 祝日判定 → UI表示（カレンダー色分け）
+5. 候補データ → `TextGenerator` で文字列化
+6. 生成されたテキスト → UI表示/クリップボードコピー
 
 ## 開発時の注意点
 
@@ -68,6 +73,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ブラウザ互換性を考慮したJavaScript記述
 - CORSエラー対策のためローカルサーバーを使用
 - デバッグにはブラウザの開発者ツールを活用
+- `index.html`のスクリプト読み込み順は依存順を守ること（`holidayService` → `scheduler` → `textGenerator` → `candidateStore` → `main`）
 
 ### 実装の重要な制約
 - **セル選択のトグル機能**: `isSelectedCell()`と`findCandidateByCell()`で選択状態を正確に判定
@@ -76,6 +82,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **ドラッグ時間表示**: `updateDragTimeDisplay`で終了時刻に15分追加の統一処理
 - **マウスイベントの処理**: ドラッグ中の状態管理と表示更新を同期
 - **日付ヘッダークリック**: 終日選択のトグル機能とイベントリスナーの重複回避
+- **終日/時間帯の削除範囲**: 終日候補の削除で同日の時間帯候補を巻き込まないこと
+- **候補データの永続化**: `CandidateStore`保存時は`Date`を`{year, month, day}`に変換し、復元時に`Date`へ戻すこと
+- **候補ID**: `Date.now()`単体ではなく、`crypto.randomUUID()`または衝突しにくいフォールバックを使うこと
 - **今日表示の優先順位**: 選択状態でも今日の下線を表示（z-index調整）
 - **祝日サービスの初期化**: `main.js`で`HolidayService`の初期化を確実に行うこと
 - **文字エンコーディング**: 内閣府CSVはShift_JIS形式、適切なデコード処理が必要
@@ -89,10 +98,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 最新の実装状況
 
+### v1.6の主要機能（保存・出力形式改善版）
+- **CandidateStore導入**: 候補のID生成、ソート、連続枠結合、削除、保存・復元を分離
+- **候補の自動保存**: `localStorage`に候補日時を保存し、再読み込み後に復元
+- **出力形式の切り替え**: 標準、シンプル、詳細の3形式をUIから選択可能
+- **出力形式の保存**: 選択した形式を`localStorage`に保存
+- **削除範囲の安全化**: 終日候補と時間帯候補が同じ日にある場合も、削除対象を正しく限定
+- **グローバルデバッグ**: `window.app`としてアプリインスタンスを参照可能
+- **ファビコン追加**: `favicon.ico`を追加
+
 ### v1.5の主要機能（操作性・表示改善版）
 - **セルトグル機能**: 選択済みセルをクリックして選択解除が可能
 - **時刻表示統一**: ドラッグ選択で「17:45→18:00」等、正確な終了時刻を表示
-- **スケジュール終了時刻**: 17:45まで選択可能、18:00表示なし（9:00-17:00の8時間対応）
+- **スケジュール終了時刻**: 17:45まで選択可能、18:00で終了（9:00-18:00の9時間対応）
 - **iPhone完全対応**: 480px以下の画面で横スクロールなしの一週間表示を実現
 - **カレンダー終端デザイン**: 17:45行の下に統一感のある境界線を追加
 - **タッチ操作最適化**: iPhone向けのセルサイズとレイアウト調整
@@ -120,15 +138,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 既知の制約・課題
 - 同日内選択のみ対応（複数日選択非対応）
-- 9:00-17:00の固定時間範囲（17:45まで選択可能、18:00で終了）
+- 9:00-18:00の固定時間範囲（17:45開始枠まで選択可能、18:00で終了）
 - GitHub Actions PR作成権限の制約（ブランチ作成のみ、PR作成は手動）
-- 日付ヘッダーの選択状態は週移動時に自動復元されない
 - カレンダー下部の余白問題（flex: 1による垂直伸展）
 
 ### 祝日データ管理システム
 - **データソース**: 内閣府「国民の祝日」CSV（https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv）
 - **更新頻度**: 年1回（12月1日午前0時UTC）
-- **データ範囲**: 現在年（2025年）以降の祝日のみ
+- **データ範囲**: 生成時点の現在年以降の祝日のみ
 - **ファイルサイズ**: 約2.8KB（最適化済み）
 - **文字エンコーディング**: Shift_JIS自動デコード対応
 - **フォールバック**: API障害時は基本的な固定祝日で動作
