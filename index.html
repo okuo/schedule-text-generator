@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>スケジュール調整 日時文字生成ツール</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -82,6 +83,15 @@
                         カレンダーから選んだ日時がここに表示されます。個別に削除もできます。
                     </p>
 
+                    <div class="format-control">
+                        <label for="format-select">出力形式</label>
+                        <select id="format-select" class="format-select">
+                            <option value="standard">3月4日（火） 9:00〜10:30</option>
+                            <option value="simple">3/4（火） 9:00〜10:30</option>
+                            <option value="detailed">2026年03月04日（火曜日） 09:00〜10:30</option>
+                        </select>
+                    </div>
+
                     <!-- 統合されたテキストエリア -->
                     <div class="integrated-output">
                         <div class="candidates-display" id="candidates-display">
@@ -112,8 +122,9 @@
 
     <!-- JavaScript -->
     <script src="js/holidayService.js"></script>
-    <script src="js/main.js"></script>
     <script src="js/scheduler.js"></script>
     <script src="js/textGenerator.js"></script>
+    <script src="js/candidateStore.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>

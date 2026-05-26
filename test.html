@@ -93,6 +93,7 @@
     <!-- テスト対象のJavaScriptファイル -->
     <script src="js/scheduler.js"></script>
     <script src="js/textGenerator.js"></script>
+    <script src="js/candidateStore.js"></script>
     
     <script>
         // テスト実行
@@ -135,6 +136,13 @@
                 // TextGeneratorクラスのインスタンス作成
                 const textGenerator = new TextGenerator();
                 output += '✓ TextGeneratorクラス: 正常に作成\n';
+
+                // CandidateStoreクラスのインスタンス作成
+                const candidateStore = new CandidateStore(textGenerator, {
+                    storageKey: 'schedule-text-generator.test-candidates'
+                });
+                candidateStore.clear();
+                output += '✓ CandidateStoreクラス: 正常に作成\n';
                 
                 result.innerHTML = `<span class="success">${output}</span>`;
             } catch (error) {
@@ -202,6 +210,42 @@
                 // ソートテスト
                 const sorted = textGenerator.sortCandidates(candidates);
                 output += `✓ ソート機能: ${sorted.length}件処理\n`;
+
+                // 候補ストアテスト
+                const candidateStore = new CandidateStore(textGenerator, {
+                    storageKey: 'schedule-text-generator.test-candidates'
+                });
+                candidateStore.clear();
+                const stored = candidateStore.add(sampleCandidate);
+                output += `✓ 候補ストア: ${stored.id ? 'ID生成正常' : 'ID生成異常'}\n`;
+
+                const fullDay = candidateStore.add({
+                    id: 'full-day',
+                    date: new Date(2025, 2, 4),
+                    startHour: 9,
+                    startMinute: 0,
+                    endHour: 18,
+                    endMinute: 0,
+                    type: 'fullDay',
+                    isFullDay: true
+                });
+                const timeRange = candidateStore.add({
+                    id: 'time-range',
+                    date: new Date(2025, 2, 4),
+                    startHour: 10,
+                    startMinute: 0,
+                    endHour: 10,
+                    endMinute: 15,
+                    type: 'timeRange'
+                });
+                const fullDayMatches = candidateStore.findWithin(fullDay);
+                const timeRangeMatches = candidateStore.findWithin(timeRange);
+                const deletionScopeIsSafe = fullDayMatches.length === 1 &&
+                    fullDayMatches[0].id === 'full-day' &&
+                    timeRangeMatches.length === 1 &&
+                    timeRangeMatches[0].id === 'time-range';
+                output += `✓ 終日/時間帯の削除範囲: ${deletionScopeIsSafe ? '正常' : '異常'}\n`;
+                candidateStore.clear();
                 
                 result.innerHTML = `<span class="success">${output}</span>`;
             } catch (error) {

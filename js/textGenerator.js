@@ -25,7 +25,7 @@ class TextGenerator {
         }
         
         // 終日の場合は特別なフォーマット
-        if (candidate.isFullDay) {
+        if (candidate.type === 'fullDay' || candidate.isFullDay) {
             return this.formatFullDay(candidate, format);
         }
         
@@ -155,7 +155,11 @@ class TextGenerator {
             }
             
             // 同じ日で連続する時間かチェック
-            if (this.getDateKey(current.date) === this.getDateKey(candidate.date) &&
+            if (!current.isFullDay &&
+                !candidate.isFullDay &&
+                current.type !== 'fullDay' &&
+                candidate.type !== 'fullDay' &&
+                this.getDateKey(current.date) === this.getDateKey(candidate.date) &&
                 current.endHour === candidate.startHour &&
                 current.endMinute === candidate.startMinute) {
                 

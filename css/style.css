@@ -521,6 +521,37 @@ body {
     flex-shrink: 0;
 }
 
+.format-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+
+.format-control label {
+    color: #475569;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.format-select {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: white;
+    color: #334155;
+    font-size: 14px;
+    padding: 9px 10px;
+}
+
+.format-select:focus {
+    outline: 2px solid #14b8a6;
+    outline-offset: 2px;
+}
+
 
 /* ボタンエリア */
 .button-area {

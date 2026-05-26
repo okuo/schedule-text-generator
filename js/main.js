@@ -3,12 +3,21 @@ class ScheduleApp {
     constructor() {
         this.scheduler = new Scheduler();
         this.textGenerator = new TextGenerator();
-        this.selectedCandidates = [];
+        this.restoreFormatSetting();
+        this.candidateStore = new CandidateStore(this.textGenerator);
         this.isSelecting = false;
         this.selectionStart = null;
         this.selectionEnd = null;
         
         this.init();
+    }
+
+    get selectedCandidates() {
+        return this.candidateStore.getAll();
+    }
+
+    set selectedCandidates(candidates) {
+        this.candidateStore.setAll(candidates);
     }
     
     async init() {
@@ -18,6 +27,9 @@ class ScheduleApp {
         this.setupEventListeners();
         this.renderCalendar();
         this.updateWeekDisplay();
+        this.updateCandidatesList();
+        this.updateOutputText();
+        this.reapplySelectedCells();
     }
     
     // 祝日サービスを初期化
@@ -66,8 +78,37 @@ class ScheduleApp {
             this.resetAll();
         });
 
+        const formatSelect = document.getElementById('format-select');
+        if (formatSelect) {
+            formatSelect.value = this.textGenerator.currentFormat;
+            formatSelect.addEventListener('change', (event) => {
+                this.textGenerator.setFormat(event.target.value);
+                this.saveFormatSetting();
+                this.updateCandidatesList();
+            });
+        }
+
         // 日付ヘッダーのクリックイベント（初回のみ）
         this.setupDayHeaderClickEvents();
+    }
+
+    restoreFormatSetting() {
+        try {
+            const savedFormat = localStorage.getItem('schedule-text-generator.format');
+            if (savedFormat) {
+                this.textGenerator.setFormat(savedFormat);
+            }
+        } catch (error) {
+            console.warn('Failed to load format setting:', error.message);
+        }
+    }
+
+    saveFormatSetting() {
+        try {
+            localStorage.setItem('schedule-text-generator.format', this.textGenerator.currentFormat);
+        } catch (error) {
+            console.warn('Failed to save format setting:', error.message);
+        }
     }
     
     // 週表示を更新
@@ -106,32 +147,27 @@ class ScheduleApp {
         const dayHeader = document.querySelector(`.day-header[data-day="${dayIndex}"]`);
         
         // 既に選択されているかチェック
-        const existingCandidate = this.selectedCandidates.find(candidate => {
-            return candidate.isFullDay && 
-                   candidate.dayOffset === dayIndex &&
-                   this.textGenerator.getDateKey(candidate.date) === this.textGenerator.getDateKey(selectedDate);
-        });
+        const existingCandidate = this.candidateStore.findFullDay(selectedDate);
         
         if (existingCandidate) {
             // 既に選択されている場合は解除
-            this.selectedCandidates = this.selectedCandidates.filter(c => c.id !== existingCandidate.id);
+            this.candidateStore.remove(existingCandidate.id);
             if (dayHeader) {
                 dayHeader.classList.remove('selected');
             }
         } else {
             // 新規選択
-            const candidate = {
-                id: Date.now(),
+            this.candidateStore.add({
                 date: selectedDate,
                 startHour: 9,
                 startMinute: 0,
                 endHour: 18,
                 endMinute: 0,
+                type: 'fullDay',
                 isFullDay: true,
                 dayOffset: dayIndex
-            };
+            });
             
-            this.selectedCandidates.push(candidate);
             if (dayHeader) {
                 dayHeader.classList.add('selected');
             }
@@ -288,8 +324,7 @@ class ScheduleApp {
 
     // 選択されたセルに対応する候補を見つける
     findCandidateByCell(cell) {
-        const candidateId = parseInt(cell.dataset.candidateId);
-        return this.selectedCandidates.find(candidate => candidate.id === candidateId);
+        return this.candidateStore.findById(cell.dataset.candidateId);
     }
 
     // 選択開始
@@ -390,18 +425,16 @@ class ScheduleApp {
         const weekDates = this.scheduler.getWeekDates();
         const selectedDate = weekDates[this.selectionStart.day];
         
-        const candidate = {
-            id: Date.now(),
+        const candidate = this.candidateStore.add({
             date: new Date(selectedDate),
             startHour: Math.floor(minTime / 60),
             startMinute: minTime % 60,
             endHour: Math.floor(maxTime / 60),
             endMinute: maxTime % 60,
+            type: 'timeRange',
             dayOffset: this.selectionStart.day
-        };
+        });
         
-        this.selectedCandidates.push(candidate);
-        this.sortCandidates();
         this.updateCandidatesList();
         this.updateOutputText();
         this.markSelectedCells(candidate);
@@ -444,7 +477,7 @@ class ScheduleApp {
     
     // 候補をソート（時系列順）
     sortCandidates() {
-        this.selectedCandidates = this.textGenerator.sortCandidates(this.selectedCandidates);
+        this.candidateStore.setAll(this.selectedCandidates);
     }
     
     // 候補リストを更新
@@ -459,7 +492,7 @@ class ScheduleApp {
         candidatesDisplay.innerHTML = '';
         
         // 連続する時間枠を結合
-        const mergedCandidates = this.textGenerator.mergeContinuousCandidates(this.selectedCandidates);
+        const mergedCandidates = this.candidateStore.getMerged();
         
         mergedCandidates.forEach(candidate => {
             const line = document.createElement('div');
@@ -486,27 +519,14 @@ class ScheduleApp {
     // 候補を削除
     removeCandidate(id) {
         this.clearSelectedCells(id);
-        this.selectedCandidates = this.selectedCandidates.filter(c => c.id !== id);
+        this.candidateStore.remove(id);
         this.updateCandidatesList();
         this.updateOutputText();
     }
     
     // 結合された候補に対応する全ての個別候補を削除
     removeMergedCandidate(mergedCandidate) {
-        const startMinutes = mergedCandidate.startHour * 60 + mergedCandidate.startMinute;
-        const endMinutes = mergedCandidate.endHour * 60 + mergedCandidate.endMinute;
-        const dateKey = this.textGenerator.getDateKey(mergedCandidate.date);
-        
-        // 同じ日付で時間範囲内の全ての候補を特定
-        const candidatesToRemove = this.selectedCandidates.filter(candidate => {
-            const candidateStart = candidate.startHour * 60 + candidate.startMinute;
-            const candidateEnd = candidate.endHour * 60 + candidate.endMinute;
-            const candidateDateKey = this.textGenerator.getDateKey(candidate.date);
-            
-            return candidateDateKey === dateKey &&
-                   candidateStart >= startMinutes &&
-                   candidateEnd <= endMinutes;
-        });
+        const candidatesToRemove = this.candidateStore.findWithin(mergedCandidate);
         
         // 終日選択の場合は日付ヘッダーの選択状態を解除
         const fullDayCandidate = candidatesToRemove.find(c => c.isFullDay);
@@ -522,9 +542,7 @@ class ScheduleApp {
             this.clearSelectedCells(candidate.id);
         });
         
-        this.selectedCandidates = this.selectedCandidates.filter(candidate => {
-            return !candidatesToRemove.includes(candidate);
-        });
+        this.candidateStore.removeMany(candidatesToRemove);
         
         this.updateCandidatesList();
         this.updateOutputText();
@@ -550,7 +568,7 @@ class ScheduleApp {
         if (this.selectedCandidates.length === 0) return;
         
         // 連続する時間枠を結合してからフォーマット
-        const mergedCandidates = this.textGenerator.mergeContinuousCandidates(this.selectedCandidates);
+        const mergedCandidates = this.candidateStore.getMerged();
         const textToCopy = this.textGenerator.formatCandidates(mergedCandidates);
         
         try {
@@ -582,7 +600,7 @@ class ScheduleApp {
     // すべてリセット
     resetAll() {
         this.clearSelectedCells();
-        this.selectedCandidates = [];
+        this.candidateStore.clear();
         this.updateCandidatesList();
         this.updateOutputText();
         this.clearSelectionDisplay();
@@ -662,7 +680,7 @@ class ScheduleApp {
 // アプリケーション初期化
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const app = new ScheduleApp();
+        window.app = new ScheduleApp();
         // 非同期初期化のため、awaitは不要（コンストラクタ内で処理）
     } catch (error) {
         console.error('❌ アプリケーションの初期化エラー:', error);
