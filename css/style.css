@@ -7,8 +7,8 @@
 
 body {
     font-family: 'Segoe UI Variable Display', 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    background-color: #f8fafc;
-    color: #334155;
+    background: #f7f8fb;
+    color: #273244;
     line-height: 1.6;
 }
 
@@ -25,10 +25,10 @@ body {
 /* ヘッダー */
 .header {
     background: white;
-    border-radius: 12px;
-    padding: 8px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 16px;
     margin-bottom: 6px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
 }
 
@@ -91,9 +91,9 @@ body {
 /* カレンダーセクション */
 .calendar-section {
     background: white;
-    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
     padding: 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     height: 100%;
     overflow: hidden;
     display: flex;
@@ -411,31 +411,76 @@ body {
     border-radius: 0 0 8px 0;
 }
 
+.calendar-unified.interval-15 .time-cell,
+.calendar-unified.interval-15 .time-slot {
+    height: 12px;
+}
+
+.calendar-unified.interval-15 .time-slot.hour-mark {
+    height: 48px;
+}
+
+.calendar-unified.interval-30 .time-cell,
+.calendar-unified.interval-30 .time-slot {
+    height: 24px;
+}
+
+.calendar-unified.interval-30 .time-slot.hour-mark {
+    height: 48px;
+}
+
+.calendar-unified.interval-60 .time-cell,
+.calendar-unified.interval-60 .time-slot,
+.calendar-unified.interval-60 .time-slot.hour-mark {
+    height: 48px;
+}
+
 
 /* 出力セクション */
 .output-section {
     background: white;
-    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
     padding: 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     height: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
 }
 
+.output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
 .output-section h3 {
     font-size: 20px;
     font-weight: 600;
     color: #1e293b;
-    margin-bottom: 12px;
+}
+
+.candidate-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #3730a3;
+    font-size: 13px;
+    font-weight: 700;
 }
 
 /* 統合された出力エリア */
 .integrated-output {
     flex: 1;
     background: white;
-    border: 2px solid #e2e8f0;
+    border: 1px solid #dbe3ef;
     border-radius: 8px;
     margin-bottom: 12px;
     display: flex;
@@ -509,34 +554,38 @@ body {
     transform: scale(1.05);
 }
 
-/* 説明文 */
-.description {
-    font-size: 14px;
-    color: #64748b;
+.settings-panel {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    padding: 12px;
     margin-bottom: 12px;
-    text-align: center;
-    padding: 10px;
-    background: #f1f5f9;
-    border-radius: 6px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
     flex-shrink: 0;
 }
 
 .format-control {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-    flex-shrink: 0;
+    grid-column: 1 / -1;
 }
 
-.format-control label {
+.setting-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.setting-field label {
     color: #475569;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 700;
     white-space: nowrap;
 }
 
-.format-select {
+.format-select,
+.time-select {
     width: 100%;
     min-width: 0;
     border: 1px solid #cbd5e1;
@@ -547,7 +596,8 @@ body {
     padding: 9px 10px;
 }
 
-.format-select:focus {
+.format-select:focus,
+.time-select:focus {
     outline: 2px solid #14b8a6;
     outline-offset: 2px;
 }
@@ -555,8 +605,9 @@ body {
 
 /* ボタンエリア */
 .button-area {
-    display: flex;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 10px;
     margin-bottom: 12px;
     flex-shrink: 0;
 }
@@ -589,6 +640,7 @@ body {
     transform: none;
 }
 
+.share-btn,
 .reset-btn {
     background: #64748b;
     color: white;
@@ -598,6 +650,15 @@ body {
     font-size: 14px;
     cursor: pointer;
     transition: all 0.2s;
+}
+
+.share-btn {
+    background: #4f46e5;
+    font-weight: 600;
+}
+
+.share-btn:hover {
+    background: #4338ca;
 }
 
 .reset-btn:hover {
@@ -738,6 +799,30 @@ body {
         align-items: flex-start;
         padding-top: 2px;
     }
+
+    .calendar-unified.interval-15 .time-cell,
+    .calendar-unified.interval-15 .time-slot {
+        height: 8px;
+    }
+
+    .calendar-unified.interval-15 .time-slot.hour-mark {
+        height: 32px;
+    }
+
+    .calendar-unified.interval-30 .time-cell,
+    .calendar-unified.interval-30 .time-slot {
+        height: 16px;
+    }
+
+    .calendar-unified.interval-30 .time-slot.hour-mark {
+        height: 32px;
+    }
+
+    .calendar-unified.interval-60 .time-cell,
+    .calendar-unified.interval-60 .time-slot,
+    .calendar-unified.interval-60 .time-slot.hour-mark {
+        height: 32px;
+    }
     
     .week-navigation {
         flex-direction: column;
@@ -862,14 +947,51 @@ body {
     }
     
     .copy-btn,
+    .share-btn,
     .reset-btn {
         padding: 10px 16px;
         font-size: 14px;
+    }
+
+    .settings-panel {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .format-control {
+        grid-column: 1 / -1;
+    }
+
+    .button-area {
+        grid-template-columns: 1fr;
     }
     
     /* ドラッグ時間表示もコンパクトに */
     .drag-time-display {
         font-size: 12px;
         padding: 6px 10px;
+    }
+
+    .calendar-unified.interval-15 .time-cell,
+    .calendar-unified.interval-15 .time-slot {
+        height: 10px;
+    }
+
+    .calendar-unified.interval-15 .time-slot.hour-mark {
+        height: 40px;
+    }
+
+    .calendar-unified.interval-30 .time-cell,
+    .calendar-unified.interval-30 .time-slot {
+        height: 20px;
+    }
+
+    .calendar-unified.interval-30 .time-slot.hour-mark {
+        height: 40px;
+    }
+
+    .calendar-unified.interval-60 .time-cell,
+    .calendar-unified.interval-60 .time-slot,
+    .calendar-unified.interval-60 .time-slot.hour-mark {
+        height: 40px;
     }
 }

@@ -18,7 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **自動更新**: 毎年12月1日午前0時（UTC）に自動実行
 
 ### テスト
-- **構文チェック**: `node --check js/main.js`、`node --check js/candidateStore.js`、`node --check js/textGenerator.js`
+- **構文チェック**: `node --check js/main.js`、`node --check js/candidateStore.js`、`node --check js/shareService.js`、`node --check js/scheduler.js`、`node --check js/textGenerator.js`
 - **ブラウザテスト**: ローカルサーバー起動後に `http://localhost:8000/test.html` を開く
 - **祝日データテスト**: ローカルサーバー起動後にブラウザで祝日表示を確認
 
@@ -40,6 +40,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── scheduler.js   # スケジュール処理
 │   ├── textGenerator.js # テキスト生成
 │   ├── candidateStore.js # 候補データ管理・永続化
+│   ├── shareService.js # 共有リンク生成・復元
 │   └── holidayService.js # 祝日判定サービス
 └── assets/            # 静的リソース
     └── holidays.json  # 祝日データ（自動生成）
@@ -49,18 +50,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **モジュールパターン**: 機能ごとにJSファイルを分離
 - **イベント駆動**: DOM操作とユーザーインタラクション
 - **関数型アプローチ**: 純粋関数でのデータ変換
-- **ローカル永続化**: `localStorage`で候補日時と出力形式を保存
+- **ローカル永続化**: `localStorage`で候補日時、出力形式、表示時間設定を保存
+- **URL共有**: `share`クエリパラメータで候補、出力形式、表示時間設定を復元
 
 ### 主要コンポーネント
 - **ScheduleApp**: 画面イベント、描画、コピー処理の統合
 - **Scheduler**: スケジュールデータの管理と操作
 - **TextGenerator**: スケジュールからテキスト形式への変換
 - **CandidateStore**: 候補のID生成、ソート、結合、削除、保存・復元
+- **ShareService**: 共有リンク用の状態エンコード・デコード
 - **HolidayService**: 祝日判定とデータ管理（外部API連携）
 
 ### データフロー
 1. アプリ起動 → 祝日サービス初期化（外部JSONデータ読み込み）
-2. 保存済み候補・出力形式 → `CandidateStore` / `TextGenerator` に復元
+2. 共有URLまたは保存済み設定 → `CandidateStore` / `TextGenerator` / `Scheduler` に復元
 3. ユーザー入力 → 候補データを `CandidateStore` に追加・削除
 4. 日付選択 → 祝日判定 → UI表示（カレンダー色分け）
 5. 候補データ → `TextGenerator` で文字列化
@@ -73,7 +76,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ブラウザ互換性を考慮したJavaScript記述
 - CORSエラー対策のためローカルサーバーを使用
 - デバッグにはブラウザの開発者ツールを活用
-- `index.html`のスクリプト読み込み順は依存順を守ること（`holidayService` → `scheduler` → `textGenerator` → `candidateStore` → `main`）
+- `index.html`のスクリプト読み込み順は依存順を守ること（`holidayService` → `scheduler` → `textGenerator` → `candidateStore` → `shareService` → `main`）
 
 ### 実装の重要な制約
 - **セル選択のトグル機能**: `isSelectedCell()`と`findCandidateByCell()`で選択状態を正確に判定
@@ -85,6 +88,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **終日/時間帯の削除範囲**: 終日候補の削除で同日の時間帯候補を巻き込まないこと
 - **候補データの永続化**: `CandidateStore`保存時は`Date`を`{year, month, day}`に変換し、復元時に`Date`へ戻すこと
 - **候補ID**: `Date.now()`単体ではなく、`crypto.randomUUID()`または衝突しにくいフォールバックを使うこと
+- **共有リンク**: URLには`ShareService`でエンコードした状態のみを入れ、読み込み時は共有URLを保存済み状態より優先すること
+- **表示時間設定**: 刻み幅は15/30/60分に限定し、終了時刻は開始時刻より後に補正すること
 - **今日表示の優先順位**: 選択状態でも今日の下線を表示（z-index調整）
 - **祝日サービスの初期化**: `main.js`で`HolidayService`の初期化を確実に行うこと
 - **文字エンコーディング**: 内閣府CSVはShift_JIS形式、適切なデコード処理が必要
@@ -97,6 +102,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **レスポンシブ**: 画面サイズに応じた適切な表示
 
 ## 最新の実装状況
+
+### v1.7の主要機能（共有・時間設定改善版）
+- **共有リンク**: 候補、出力形式、表示時間設定をURLで共有可能
+- **表示時間設定**: 開始時刻、終了時刻、刻み幅（15/30/60分）をUIから変更可能
+- **設定の保存**: 表示時間設定を`localStorage`に保存
+- **デザイン改善**: 出力エリアを操作パネル、候補リスト、アクションに整理
+- **ShareService追加**: 共有状態のエンコード・デコードを分離
 
 ### v1.6の主要機能（保存・出力形式改善版）
 - **CandidateStore導入**: 候補のID生成、ソート、連続枠結合、削除、保存・復元を分離

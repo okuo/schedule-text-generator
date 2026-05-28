@@ -1,10 +1,16 @@
 // アプリケーションのメインクラス
 class ScheduleApp {
     constructor() {
-        this.scheduler = new Scheduler();
+        this.timeSettingsKey = 'schedule-text-generator.timeRange';
         this.textGenerator = new TextGenerator();
-        this.restoreFormatSetting();
+        this.sharedState = typeof ShareService !== 'undefined' ? ShareService.readFromUrl() : null;
+        this.applyFormatSetting();
+        this.scheduler = new Scheduler({
+            timeRange: this.sharedState?.timeRange || this.restoreTimeRangeSetting()
+        });
+        this.applySharedWeek();
         this.candidateStore = new CandidateStore(this.textGenerator);
+        this.applySharedCandidates();
         this.isSelecting = false;
         this.selectionStart = null;
         this.selectionEnd = null;
@@ -30,6 +36,10 @@ class ScheduleApp {
         this.updateCandidatesList();
         this.updateOutputText();
         this.reapplySelectedCells();
+
+        if (this.sharedState) {
+            this.showNotification('共有リンクを読み込みました');
+        }
     }
     
     // 祝日サービスを初期化
@@ -50,28 +60,26 @@ class ScheduleApp {
         // 週間ナビゲーション
         document.getElementById('prev-week').addEventListener('click', () => {
             this.scheduler.moveToPreviousWeek();
-            this.renderCalendar();
-            this.updateWeekDisplay();
-            this.reapplySelectedCells();
+            this.refreshCalendar();
         });
         
         document.getElementById('next-week').addEventListener('click', () => {
             this.scheduler.moveToNextWeek();
-            this.renderCalendar();
-            this.updateWeekDisplay();
-            this.reapplySelectedCells();
+            this.refreshCalendar();
         });
         
         document.getElementById('today-btn').addEventListener('click', () => {
             this.scheduler.moveToThisWeek();
-            this.renderCalendar();
-            this.updateWeekDisplay();
-            this.reapplySelectedCells();
+            this.refreshCalendar();
         });
         
         // ボタン
         document.getElementById('copy-btn').addEventListener('click', () => {
             this.copyToClipboard();
+        });
+
+        document.getElementById('share-btn').addEventListener('click', () => {
+            this.copyShareLink();
         });
 
         document.getElementById('reset-btn').addEventListener('click', () => {
@@ -88,8 +96,71 @@ class ScheduleApp {
             });
         }
 
+        this.setupTimeSettingsControls();
+
         // 日付ヘッダーのクリックイベント（初回のみ）
         this.setupDayHeaderClickEvents();
+    }
+
+    setupTimeSettingsControls() {
+        const startSelect = document.getElementById('start-hour-select');
+        const endSelect = document.getElementById('end-hour-select');
+        const intervalSelect = document.getElementById('interval-select');
+
+        if (!startSelect || !endSelect || !intervalSelect) return;
+
+        this.populateHourOptions(startSelect, 0, 23);
+        this.populateHourOptions(endSelect, 1, 24);
+        this.syncTimeSettingsControls();
+
+        [startSelect, endSelect, intervalSelect].forEach(select => {
+            select.addEventListener('change', () => {
+                this.applyTimeSettingsFromControls();
+            });
+        });
+    }
+
+    populateHourOptions(select, minHour, maxHour) {
+        select.innerHTML = '';
+
+        for (let hour = minHour; hour <= maxHour; hour++) {
+            const option = document.createElement('option');
+            option.value = String(hour);
+            option.textContent = `${hour}:00`;
+            select.appendChild(option);
+        }
+    }
+
+    syncTimeSettingsControls() {
+        const { startHour, endHour, minuteInterval } = this.scheduler.getTimeRange();
+        document.getElementById('start-hour-select').value = String(startHour);
+        document.getElementById('end-hour-select').value = String(endHour);
+        document.getElementById('interval-select').value = String(minuteInterval);
+    }
+
+    applyTimeSettingsFromControls() {
+        const startHour = Number.parseInt(document.getElementById('start-hour-select').value, 10);
+        const requestedEndHour = Number.parseInt(document.getElementById('end-hour-select').value, 10);
+        const minuteInterval = Number.parseInt(document.getElementById('interval-select').value, 10);
+        const endHour = requestedEndHour <= startHour ? startHour + 1 : requestedEndHour;
+
+        this.scheduler.setTimeRange({
+            startHour,
+            endHour,
+            minuteInterval
+        });
+        this.saveTimeRangeSetting();
+        this.syncTimeSettingsControls();
+        this.refreshCalendar();
+    }
+
+    applyFormatSetting() {
+        if (this.sharedState?.format) {
+            this.textGenerator.setFormat(this.sharedState.format);
+            return;
+        }
+
+        this.restoreFormatSetting();
     }
 
     restoreFormatSetting() {
@@ -110,6 +181,41 @@ class ScheduleApp {
             console.warn('Failed to save format setting:', error.message);
         }
     }
+
+    restoreTimeRangeSetting() {
+        try {
+            const savedTimeRange = localStorage.getItem(this.timeSettingsKey);
+            return savedTimeRange ? JSON.parse(savedTimeRange) : null;
+        } catch (error) {
+            console.warn('Failed to load time settings:', error.message);
+            return null;
+        }
+    }
+
+    saveTimeRangeSetting() {
+        try {
+            localStorage.setItem(this.timeSettingsKey, JSON.stringify(this.scheduler.getTimeRange()));
+        } catch (error) {
+            console.warn('Failed to save time settings:', error.message);
+        }
+    }
+
+    applySharedWeek() {
+        if (!this.sharedState?.currentWeek) return;
+
+        const { year, month, day } = this.sharedState.currentWeek;
+        this.scheduler.setCurrentWeek(new Date(year, month - 1, day));
+    }
+
+    applySharedCandidates() {
+        if (!this.sharedState) return;
+
+        if (Array.isArray(this.sharedState.candidates)) {
+            this.candidateStore.setAll(this.sharedState.candidates);
+        }
+        this.saveFormatSetting();
+        this.saveTimeRangeSetting();
+    }
     
     // 週表示を更新
     updateWeekDisplay() {
@@ -119,10 +225,22 @@ class ScheduleApp {
     
     // カレンダーを描画
     renderCalendar() {
+        const calendarUnified = document.getElementById('calendar-unified');
+        if (calendarUnified) {
+            calendarUnified.classList.remove('interval-15', 'interval-30', 'interval-60');
+            calendarUnified.classList.add(`interval-${this.scheduler.timeRange.minuteInterval}`);
+        }
+
         this.renderTimeColumn();
         this.renderDaysGrid();
         this.updateDateHeaders();
         // 日付ヘッダーのイベントは初回のみ設定（setupEventListenersで実行）
+    }
+
+    refreshCalendar() {
+        this.renderCalendar();
+        this.updateWeekDisplay();
+        this.reapplySelectedCells();
     }
 
     // 日付ヘッダーのクリックイベントを設定（初回のみ）
@@ -159,9 +277,9 @@ class ScheduleApp {
             // 新規選択
             this.candidateStore.add({
                 date: selectedDate,
-                startHour: 9,
+                startHour: this.scheduler.timeRange.startHour,
                 startMinute: 0,
-                endHour: 18,
+                endHour: this.scheduler.timeRange.endHour,
                 endMinute: 0,
                 type: 'fullDay',
                 isFullDay: true,
@@ -183,6 +301,7 @@ class ScheduleApp {
         timeColumn.innerHTML = '';
         
         const timeSlots = this.scheduler.generateTimeSlots();
+        const slotsPerHour = 60 / this.scheduler.timeRange.minuteInterval;
         let skipNext = 0;
         
         timeSlots.forEach((slot, index) => {
@@ -197,7 +316,7 @@ class ScheduleApp {
             if (slot.isHourMark) {
                 timeSlot.classList.add('hour-mark');
                 timeSlot.textContent = slot.timeString;
-                skipNext = 3; // 次の3つのスロットをスキップ
+                skipNext = slotsPerHour - 1;
             }
             
             timeColumn.appendChild(timeSlot);
@@ -225,8 +344,8 @@ class ScheduleApp {
                 timeCell.dataset.hour = slot.hour;
                 timeCell.dataset.minute = slot.minute;
                 
-                // 時間境界（毎時45分）にクラスを追加
-                if (slot.minute === 45) {
+                // 時間境界にクラスを追加
+                if (slot.minute + this.scheduler.timeRange.minuteInterval >= 60) {
                     timeCell.classList.add('hour-boundary');
                 }
                 
@@ -312,7 +431,7 @@ class ScheduleApp {
         const minTime = Math.min(startTime, endTime);
         let maxTime = Math.max(startTime, endTime);
         if (includeEndOffset) {
-            maxTime += 15;
+            maxTime += this.scheduler.timeRange.minuteInterval;
         }
         return { minTime, maxTime };
     }
@@ -445,6 +564,8 @@ class ScheduleApp {
     
     // 選択されたセルをマークする
     markSelectedCells(candidate) {
+        if (!this.canRenderCandidateOnGrid(candidate)) return;
+
         const startMinutes = candidate.startHour * 60 + candidate.startMinute;
         const endMinutes = candidate.endHour * 60 + candidate.endMinute;
         
@@ -453,12 +574,27 @@ class ScheduleApp {
             const cellMinute = parseInt(cell.dataset.minute);
             const cellMinutes = cellHour * 60 + cellMinute;
             
-            // 常に終了時刻は含めない（時間計算で15分追加済みのため）
+            // 常に終了時刻は含めない（時間計算で刻み幅を追加済みのため）
             if (cellMinutes >= startMinutes && cellMinutes < endMinutes) {
                 cell.classList.add('selected');
                 cell.dataset.candidateId = candidate.id;
             }
         });
+    }
+
+    canRenderCandidateOnGrid(candidate) {
+        if (candidate.isFullDay || candidate.type === 'fullDay') return false;
+
+        const { startHour, endHour, minuteInterval } = this.scheduler.timeRange;
+        const rangeStart = startHour * 60;
+        const rangeEnd = endHour * 60;
+        const startMinutes = candidate.startHour * 60 + candidate.startMinute;
+        const endMinutes = candidate.endHour * 60 + candidate.endMinute;
+
+        return startMinutes >= rangeStart &&
+               endMinutes <= rangeEnd &&
+               (startMinutes - rangeStart) % minuteInterval === 0 &&
+               (endMinutes - rangeStart) % minuteInterval === 0;
     }
     
     // 選択マークをクリア
@@ -483,6 +619,10 @@ class ScheduleApp {
     // 候補リストを更新
     updateCandidatesList() {
         const candidatesDisplay = document.getElementById('candidates-display');
+        const candidateCount = document.getElementById('candidate-count');
+        if (candidateCount) {
+            candidateCount.textContent = `${this.selectedCandidates.length}件`;
+        }
         
         if (this.selectedCandidates.length === 0) {
             candidatesDisplay.innerHTML = '<div class="empty-message">選択した日時がここに表示されます</div>';
@@ -563,22 +703,36 @@ class ScheduleApp {
     
     // クリップボードにコピー
     async copyToClipboard() {
-        const notification = document.getElementById('copy-notification');
-        
         if (this.selectedCandidates.length === 0) return;
         
         // 連続する時間枠を結合してからフォーマット
         const mergedCandidates = this.candidateStore.getMerged();
         const textToCopy = this.textGenerator.formatCandidates(mergedCandidates);
-        
+
+        await this.copyTextToClipboard(textToCopy);
+        this.showNotification('コピーしました！');
+    }
+
+    async copyShareLink() {
+        if (typeof ShareService === 'undefined') return;
+
+        const shareUrl = ShareService.buildUrl(this.buildShareState());
+        await this.copyTextToClipboard(shareUrl);
+        this.showNotification('共有リンクをコピーしました');
+    }
+
+    buildShareState() {
+        return {
+            currentWeek: ShareService.serializeDate(this.scheduler.currentWeek),
+            format: this.textGenerator.currentFormat,
+            timeRange: this.scheduler.getTimeRange(),
+            candidates: this.candidateStore.serialize()
+        };
+    }
+
+    async copyTextToClipboard(textToCopy) {
         try {
             await navigator.clipboard.writeText(textToCopy);
-            
-            // 通知を表示
-            notification.classList.add('show');
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 2000);
         } catch (err) {
             // フォールバック - 一時的なテキストエリアを作成
             const tempTextArea = document.createElement('textarea');
@@ -589,12 +743,17 @@ class ScheduleApp {
             tempTextArea.select();
             document.execCommand('copy');
             document.body.removeChild(tempTextArea);
-            
-            notification.classList.add('show');
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 2000);
         }
+    }
+
+    showNotification(message) {
+        const notification = document.getElementById('copy-notification');
+        notification.textContent = message;
+        notification.classList.add('show');
+        clearTimeout(this.notificationTimer);
+        this.notificationTimer = setTimeout(() => {
+            notification.classList.remove('show');
+        }, 2000);
     }
     
     // すべてリセット

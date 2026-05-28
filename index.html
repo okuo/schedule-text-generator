@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>スケジュール調整 日時文字生成ツール</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=1.7.1">
 </head>
 <body>
     <div class="container">
@@ -76,20 +76,36 @@
             <!-- 出力エリア -->
             <section class="output-section">
                 <div class="output-container">
-                    <h3>選択した日時</h3>
-                    
-                    <!-- 説明文 -->
-                    <p class="description">
-                        カレンダーから選んだ日時がここに表示されます。個別に削除もできます。
-                    </p>
+                    <div class="output-header">
+                        <h3>選択した日時</h3>
+                        <span id="candidate-count" class="candidate-count">0件</span>
+                    </div>
 
-                    <div class="format-control">
-                        <label for="format-select">出力形式</label>
-                        <select id="format-select" class="format-select">
-                            <option value="standard">3月4日（火） 9:00〜10:30</option>
-                            <option value="simple">3/4（火） 9:00〜10:30</option>
-                            <option value="detailed">2026年03月04日（火曜日） 09:00〜10:30</option>
-                        </select>
+                    <div class="settings-panel">
+                        <div class="setting-field format-control">
+                            <label for="format-select">出力形式</label>
+                            <select id="format-select" class="format-select">
+                                <option value="standard">3月4日（火） 9:00〜10:30</option>
+                                <option value="simple">3/4（火） 9:00〜10:30</option>
+                                <option value="detailed">2026年03月04日（火曜日） 09:00〜10:30</option>
+                            </select>
+                        </div>
+                        <div class="setting-field">
+                            <label for="start-hour-select">開始</label>
+                            <select id="start-hour-select" class="time-select"></select>
+                        </div>
+                        <div class="setting-field">
+                            <label for="end-hour-select">終了</label>
+                            <select id="end-hour-select" class="time-select"></select>
+                        </div>
+                        <div class="setting-field">
+                            <label for="interval-select">刻み</label>
+                            <select id="interval-select" class="time-select">
+                                <option value="15">15分</option>
+                                <option value="30">30分</option>
+                                <option value="60">60分</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- 統合されたテキストエリア -->
@@ -102,6 +118,7 @@
                     <!-- ボタンエリア -->
                     <div class="button-area">
                         <button id="copy-btn" class="copy-btn">文字をコピー</button>
+                        <button id="share-btn" class="share-btn">共有リンク</button>
                         <button id="reset-btn" class="reset-btn">リセット</button>
                     </div>
 
@@ -121,10 +138,11 @@
     <div id="drag-time-display" class="drag-time-display"></div>
 
     <!-- JavaScript -->
-    <script src="js/holidayService.js"></script>
-    <script src="js/scheduler.js"></script>
-    <script src="js/textGenerator.js"></script>
-    <script src="js/candidateStore.js"></script>
-    <script src="js/main.js"></script>
+    <script src="js/holidayService.js?v=1.7.1"></script>
+    <script src="js/scheduler.js?v=1.7.1"></script>
+    <script src="js/textGenerator.js?v=1.7.1"></script>
+    <script src="js/candidateStore.js?v=1.7.1"></script>
+    <script src="js/shareService.js?v=1.7.1"></script>
+    <script src="js/main.js?v=1.7.1"></script>
 </body>
 </html>

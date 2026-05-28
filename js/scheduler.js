@@ -1,14 +1,44 @@
 // スケジューラー機能を管理するクラス
 class Scheduler {
-    constructor() {
+    constructor(options = {}) {
         this.currentWeek = new Date();
-        this.timeRange = {
-            startHour: 9,
-            endHour: 18,
-            minuteInterval: 15
-        };
+        this.timeRange = this.createTimeRange(options.timeRange);
         this.weekdays = ['月', '火', '水', '木', '金', '土', '日'];
         this.weekdaysFull = ['日', '月', '火', '水', '木', '金', '土'];
+    }
+
+    createTimeRange(timeRange = {}) {
+        timeRange = timeRange || {};
+        const allowedIntervals = [15, 30, 60];
+        const startHour = this.clampHour(timeRange.startHour, 9, 0, 23);
+        const endHour = this.clampHour(timeRange.endHour, 18, startHour + 1, 24);
+        const minuteInterval = allowedIntervals.includes(Number(timeRange.minuteInterval))
+            ? Number(timeRange.minuteInterval)
+            : 15;
+
+        return {
+            startHour,
+            endHour: Math.max(endHour, startHour + 1),
+            minuteInterval
+        };
+    }
+
+    clampHour(value, fallback, min, max) {
+        const parsed = Number.parseInt(value, 10);
+        const hour = Number.isFinite(parsed) ? parsed : fallback;
+        return Math.min(Math.max(hour, min), max);
+    }
+
+    setTimeRange(timeRange = {}) {
+        this.timeRange = this.createTimeRange({
+            ...this.timeRange,
+            ...timeRange
+        });
+        return this;
+    }
+
+    getTimeRange() {
+        return { ...this.timeRange };
     }
     
     // 現在の週を設定
@@ -59,8 +89,12 @@ class Scheduler {
     
     // 指定した時間が有効な範囲内かチェック
     isValidTime(hour, minute) {
-        return hour >= this.timeRange.startHour && 
-               hour <= this.timeRange.endHour &&
+        if (hour === this.timeRange.endHour) {
+            return minute === 0;
+        }
+
+        return hour >= this.timeRange.startHour &&
+               hour < this.timeRange.endHour &&
                minute >= 0 && minute < 60 &&
                minute % this.timeRange.minuteInterval === 0;
     }

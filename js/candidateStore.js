@@ -56,6 +56,10 @@ class CandidateStore {
         return this.textGenerator.mergeContinuousCandidates(this.candidates);
     }
 
+    serialize() {
+        return this.candidates.map(candidate => this.serializeCandidate(candidate));
+    }
+
     findById(id) {
         return this.candidates.find(candidate => candidate.id === id) || null;
     }
@@ -129,16 +133,20 @@ class CandidateStore {
         return new Date(date);
     }
 
+    serializeCandidate(candidate) {
+        return {
+            ...candidate,
+            date: {
+                year: candidate.date.getFullYear(),
+                month: candidate.date.getMonth() + 1,
+                day: candidate.date.getDate()
+            }
+        };
+    }
+
     save() {
         try {
-            localStorage.setItem(this.storageKey, JSON.stringify(this.candidates.map(candidate => ({
-                ...candidate,
-                date: {
-                    year: candidate.date.getFullYear(),
-                    month: candidate.date.getMonth() + 1,
-                    day: candidate.date.getDate()
-                }
-            }))));
+            localStorage.setItem(this.storageKey, JSON.stringify(this.serialize()));
         } catch (error) {
             console.warn('Failed to save candidates:', error.message);
         }

@@ -88,12 +88,18 @@
             <div class="test-title">5. エラーハンドリングテスト</div>
             <div class="test-result" id="error-test"></div>
         </div>
+
+        <div class="test-section">
+            <div class="test-title">6. 共有リンクテスト</div>
+            <div class="test-result" id="share-test"></div>
+        </div>
     </div>
 
     <!-- テスト対象のJavaScriptファイル -->
-    <script src="js/scheduler.js"></script>
-    <script src="js/textGenerator.js"></script>
-    <script src="js/candidateStore.js"></script>
+    <script src="js/scheduler.js?v=1.7.1"></script>
+    <script src="js/textGenerator.js?v=1.7.1"></script>
+    <script src="js/candidateStore.js?v=1.7.1"></script>
+    <script src="js/shareService.js?v=1.7.1"></script>
     
     <script>
         // テスト実行
@@ -117,6 +123,9 @@
                 
                 // 5. エラーハンドリングテスト
                 testErrorHandling();
+
+                // 6. 共有リンクテスト
+                testShareService();
                 
             } catch (error) {
                 document.getElementById('class-test').innerHTML = 
@@ -174,6 +183,16 @@
                 scheduler.moveToPreviousWeek();
                 scheduler.moveToThisWeek();
                 output += '✓ 週移動機能: 正常\n';
+
+                // 時間設定テスト
+                scheduler.setTimeRange({ startHour: 8, endHour: 20, minuteInterval: 30 });
+                const customSlots = scheduler.generateTimeSlots();
+                const timeRange = scheduler.getTimeRange();
+                const timeRangeOk = timeRange.startHour === 8 &&
+                    timeRange.endHour === 20 &&
+                    timeRange.minuteInterval === 30 &&
+                    customSlots.length === 24;
+                output += `✓ 表示時間設定: ${timeRangeOk ? '正常' : '異常'}\n`;
                 
                 result.innerHTML = `<span class="success">${output}</span>`;
             } catch (error) {
@@ -311,6 +330,44 @@
                 result.innerHTML = `<span class="success">${output}</span>`;
             } catch (error) {
                 result.innerHTML = `<span class="error">✗ エラーハンドリングテストエラー: ${error.message}</span>`;
+            }
+        }
+
+        function testShareService() {
+            const result = document.getElementById('share-test');
+            let output = '';
+
+            try {
+                const state = {
+                    currentWeek: { year: 2026, month: 5, day: 28 },
+                    format: 'simple',
+                    timeRange: { startHour: 8, endHour: 20, minuteInterval: 30 },
+                    candidates: [{
+                        id: 'share-test-candidate',
+                        date: { year: 2026, month: 5, day: 28 },
+                        startHour: 10,
+                        startMinute: 0,
+                        endHour: 11,
+                        endMinute: 0,
+                        type: 'timeRange',
+                        isFullDay: false
+                    }]
+                };
+
+                const encoded = ShareService.encode(state);
+                const decoded = ShareService.decode(encoded);
+                const url = ShareService.buildUrl(state, 'http://localhost:8000/index.html');
+                const fromUrl = ShareService.readFromUrl(url);
+                const shareOk = decoded.format === 'simple' &&
+                    fromUrl.timeRange.minuteInterval === 30 &&
+                    fromUrl.candidates[0].id === 'share-test-candidate';
+
+                output += `✓ 共有データエンコード: ${encoded.length > 0 ? '正常' : '異常'}\n`;
+                output += `✓ 共有URL復元: ${shareOk ? '正常' : '異常'}\n`;
+
+                result.innerHTML = `<span class="success">${output}</span>`;
+            } catch (error) {
+                result.innerHTML = `<span class="error">✗ 共有リンクテストエラー: ${error.message}</span>`;
             }
         }
     </script>
